@@ -192,8 +192,9 @@ body.with-rail .felt-table::after {
 }
 
 .player-area {
-  padding-bottom: 10px;
+  padding-bottom: 0;
   flex-direction: column-reverse;
+  margin-top: auto;
 }
 
 .hand-label {

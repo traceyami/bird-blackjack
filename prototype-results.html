@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Result Messages - Style Reference</title>
+  <link rel="stylesheet" href="https://use.typekit.net/bmv5fsi.css">
+  <style>
+    :root {
+      --color-green: #025b2a;
+      --color-green-dark: #024421;
+      --color-green-light: #036b32;
+      --color-gold: #ffcd00;
+      --color-red: #c8102e;
+      --color-white: #f8f9fd;
+      --color-shadow: rgba(0, 0, 0, 0.3);
+      --font-primary: 'Copperplate', 'Copperplate Gothic Bold', serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: var(--font-primary);
+      background: var(--color-green);
+      background-image: radial-gradient(ellipse at center, var(--color-green-light) 0%, var(--color-green) 40%, var(--color-green-dark) 100%);
+      color: var(--color-white);
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--color-gold);
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      text-align: center;
+      opacity: 0.7;
+      margin-bottom: 40px;
+      font-size: 0.875rem;
+    }
+
+    .messages {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .message-box {
+      background: var(--color-green);
+      min-width: 280px;
+      padding: 50px 70px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .message-box .label {
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      opacity: 0.5;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .message-box .text {
+      font-size: 2rem;
+      font-weight: bold;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 4px var(--color-shadow);
+    }
+
+    /* Live styles */
+    .text.win {
+      color: var(--color-gold);
+    }
+
+    .text.blackjack {
+      color: var(--color-gold);
+      text-shadow: 0 0 20px var(--color-gold), 2px 2px 4px var(--color-shadow);
+    }
+
+    .text.push {
+      color: var(--color-white);
+    }
+
+    .message-box.lose-bg {
+      background: #1a1210;
+    }
+
+    .text.lose {
+      color: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+  <h1>Result Messages</h1>
+  <p class="subtitle">Live styles — reference for all end-of-hand states</p>
+
+  <div class="messages">
+    <div class="message-box">
+      <div class="label">Win</div>
+      <div class="text win">You Win!</div>
+    </div>
+
+    <div class="message-box lose-bg">
+      <div class="label">Lose</div>
+      <div class="text lose">Dealer Wins</div>
+    </div>
+
+    <div class="message-box">
+      <div class="label">Push</div>
+      <div class="text push">Push</div>
+    </div>
+
+    <div class="message-box">
+      <div class="label">Blackjack</div>
+      <div class="text blackjack">Blackjack!</div>
+    </div>
+
+    <div class="message-box lose-bg">
+      <div class="label">Broke</div>
+      <div class="text lose">Broke!</div>
+    </div>
+  </div>
+
+</body>
+</html>
