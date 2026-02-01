@@ -32,6 +32,8 @@ bird-blackjack/
 └── README.md
 ```
 
+**Card naming:** `{suit}_{rank}.png` (e.g., `hearts_A.png`, `spades_K.png`) + `back.png`
+
 ## Brand Colors
 
 From birb cards marketing materials:
@@ -45,6 +47,10 @@ From birb cards marketing materials:
 | White | `#f8f9fd` | Card faces |
 | Brown | `#996c2e` | Secondary accent |
 | Blue | `#004c97` | Sparingly for buttons |
+
+## Working Style
+
+- When prototyping design variations, create separate files (e.g., `prototype-a.html`, `prototype-b.html`) instead of modifying the original — allows side-by-side comparison without losing work
 
 ## Game Rules (MVP)
 

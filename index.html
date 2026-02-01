@@ -7,11 +7,12 @@
   <link rel="stylesheet" href="https://use.typekit.net/bmv5fsi.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="with-rail">
+  <div class="felt-table">
+    <img src="assets/logo.svg" alt="birb" class="felt-branding">
+    <div class="felt-title">Blackjack</div>
+  </div>
   <div class="game-container">
-    <header class="game-header">
-      <h1>Bird Card Blackjack</h1>
-    </header>
 
     <main class="game-table">
       <!-- Dealer Area -->
@@ -40,18 +41,16 @@
         <span class="bet-info">Bet: $25</span>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="action-buttons" id="action-buttons">
-        <button class="btn btn-hit" id="btn-hit" disabled>Hit</button>
-        <button class="btn btn-stand" id="btn-stand" disabled>Stand</button>
-        <button class="btn btn-double" id="btn-double" disabled>2X</button>
+      <!-- Button Area (swaps between deal and action buttons) -->
+      <div class="button-area">
+        <button class="btn btn-deal" id="btn-deal">Deal Hand</button>
+        <div class="action-buttons" id="action-buttons">
+          <button class="btn btn-hit" id="btn-hit">Hit</button>
+          <button class="btn btn-stand" id="btn-stand">Stand</button>
+          <button class="btn btn-double" id="btn-double">2X</button>
+        </div>
+        <button class="btn btn-restart" id="btn-restart">Start Over ($500)</button>
       </div>
-
-      <!-- Deal Button -->
-      <button class="btn btn-deal" id="btn-deal">Deal Hand</button>
-
-      <!-- Restart Button (shown when broke) -->
-      <button class="btn btn-restart" id="btn-restart" style="display: none;">Start Over ($500)</button>
     </footer>
   </div>
 

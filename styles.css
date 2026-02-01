@@ -49,6 +49,99 @@ html, body {
   overflow: hidden;
 }
 
+/* Felt Table - Full Bleed */
+.felt-table {
+  position: fixed;
+  inset: 0;
+  background: var(--color-green);
+  background-image:
+    radial-gradient(ellipse at center 40%, var(--color-green-light) 0%, var(--color-green) 40%, var(--color-green-dark) 100%);
+}
+
+/* Felt texture overlay */
+.felt-table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+/* Vignette / depth shadow */
+.felt-table::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 150px 60px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+/* Felt branding - flat print on felt */
+.felt-branding {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 45px;
+  width: auto;
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Felt title - screen printed below logo */
+.felt-title {
+  position: absolute;
+  top: calc(42% + 30px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-primary);
+  font-size: 1.1rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Felt branding responsive */
+@media (min-width: 768px) {
+  .felt-branding {
+    height: 65px;
+  }
+
+  .felt-title {
+    top: calc(42% + 45px);
+    font-size: 1.4rem;
+  }
+}
+
+/* VERSION B: Rail - add class "with-rail" to body to enable */
+body.with-rail {
+  background: #1a1a18;
+}
+
+body.with-rail .felt-table {
+  inset: 16px;
+  border-radius: 24px;
+  box-shadow:
+    0 0 0 6px var(--color-brown),
+    0 0 0 10px #4a3a1a,
+    0 0 0 12px #2a2210,
+    0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+body.with-rail .felt-table::before {
+  border-radius: 24px;
+}
+
+body.with-rail .felt-table::after {
+  border-radius: 24px;
+  box-shadow: inset 0 0 120px 50px rgba(0, 0, 0, 0.35);
+}
+
 /* Game Container */
 .game-container {
   display: flex;
@@ -56,27 +149,22 @@ html, body {
   height: 100%;
   max-width: 600px;
   margin: 0 auto;
-  background: var(--color-green-felt);
-  background-image:
-    radial-gradient(ellipse at center, var(--color-green-light) 0%, var(--color-green) 50%, var(--color-green-dark) 100%);
   position: relative;
+  z-index: 1;
 }
 
 /* Header */
 .game-header {
-  padding: 16px;
+  padding: 18px 16px;
   text-align: center;
   background: var(--color-green-dark);
   border-bottom: 3px solid var(--color-gold);
 }
 
-.game-header h1 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--color-gold);
-  text-shadow: 2px 2px 4px var(--color-shadow);
+.header-logo {
+  height: 40px;
+  width: auto;
+  filter: drop-shadow(2px 3px 2px var(--color-shadow));
 }
 
 /* Game Table */
@@ -224,22 +312,28 @@ html, body {
 
 /* Result Message */
 .result-message {
-  position: absolute;
-  top: 50%;
+  position: fixed;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 2rem;
   font-weight: bold;
   letter-spacing: 3px;
   text-transform: uppercase;
-  text-shadow: 3px 3px 6px var(--color-shadow);
+  text-shadow: 2px 2px 4px var(--color-shadow);
   opacity: 0;
   pointer-events: none;
   z-index: 10;
+  background: var(--color-green);
+  min-width: 280px;
+  padding: 50px 70px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .result-message.show {
-  animation: showResult 0.5s ease-out forwards;
+  animation: showResult 0.4s ease-out forwards;
 }
 
 .result-message.win {
@@ -247,7 +341,8 @@ html, body {
 }
 
 .result-message.lose {
-  color: var(--color-red);
+  color: #ff6b6b;
+  background: #1a1210;
 }
 
 .result-message.push {
@@ -364,11 +459,33 @@ html, body {
   font-size: 0.875rem;
 }
 
+/* Button Area - swaps between deal/action/restart */
+.button-area {
+  position: relative;
+  min-height: 52px;
+}
+
+.button-area > * {
+  display: none;
+}
+
+.button-area > .active {
+  display: flex;
+}
+
 /* Action Buttons */
 .action-buttons {
-  display: flex;
   justify-content: center;
   gap: 12px;
+}
+
+.action-buttons.active {
+  display: flex;
+}
+
+.btn-deal.active,
+.btn-restart.active {
+  display: block;
 }
 
 /* Buttons */
@@ -453,8 +570,8 @@ html, body {
     --card-gap: -40px;
   }
 
-  .game-header h1 {
-    font-size: 2rem;
+  .header-logo {
+    height: 50px;
   }
 
   .result-message {

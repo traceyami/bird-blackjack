@@ -36,7 +36,9 @@ function init() {
   loadBankroll();
   updateBankrollDisplay();
   setupEventListeners();
-  checkBroke();
+  if (!checkBroke()) {
+    showDealButton();
+  }
 }
 
 // Session Storage
@@ -207,30 +209,33 @@ function hideResult() {
 }
 
 // Button States
-function setButtonsEnabled(hit, stand, double) {
-  elements.btnHit.disabled = !hit;
-  elements.btnStand.disabled = !stand;
-  elements.btnDouble.disabled = !double;
-}
-
 function showDealButton() {
-  elements.btnDeal.style.display = 'block';
-  elements.btnDeal.disabled = false;
+  elements.btnDeal.classList.add('active');
+  elements.actionButtons.classList.remove('active');
+  elements.btnRestart.classList.remove('active');
 }
 
-function hideDealButton() {
-  elements.btnDeal.style.display = 'none';
+function showActionButtons(canDouble) {
+  elements.btnDeal.classList.remove('active');
+  elements.actionButtons.classList.add('active');
+  elements.btnRestart.classList.remove('active');
+  elements.btnHit.disabled = false;
+  elements.btnStand.disabled = false;
+  elements.btnDouble.disabled = !canDouble;
+}
+
+function showRestartButton() {
+  elements.btnDeal.classList.remove('active');
+  elements.actionButtons.classList.remove('active');
+  elements.btnRestart.classList.add('active');
 }
 
 function checkBroke() {
   if (gameState.bankroll < gameState.currentBet) {
-    elements.btnDeal.style.display = 'none';
-    elements.btnRestart.style.display = 'block';
-    setButtonsEnabled(false, false, false);
+    showRestartButton();
     showResult('Broke!', 'lose');
     return true;
   }
-  elements.btnRestart.style.display = 'none';
   return false;
 }
 
@@ -259,9 +264,8 @@ async function deal() {
   saveBankroll();
   updateBankrollDisplay();
 
-  // Hide deal button
-  hideDealButton();
-  setButtonsEnabled(false, false, false);
+  // Hide buttons during dealing
+  elements.btnDeal.classList.remove('active');
 
   // Deal cards with animation
   const card1 = gameState.deck.pop();
@@ -299,13 +303,16 @@ async function deal() {
   // Player's turn
   gameState.phase = 'playerTurn';
   const canDouble = gameState.bankroll >= gameState.currentBet;
-  setButtonsEnabled(true, true, canDouble);
+  showActionButtons(canDouble);
 }
 
 async function hit() {
   if (gameState.phase !== 'playerTurn') return;
 
-  setButtonsEnabled(false, false, false);
+  // Disable buttons during animation
+  elements.btnHit.disabled = true;
+  elements.btnStand.disabled = true;
+  elements.btnDouble.disabled = true;
 
   const card = gameState.deck.pop();
   gameState.playerHand.push(card);
@@ -319,13 +326,14 @@ async function hit() {
   }
 
   // Can't double after hitting
-  setButtonsEnabled(true, true, false);
+  showActionButtons(false);
 }
 
 async function stand() {
   if (gameState.phase !== 'playerTurn') return;
 
-  setButtonsEnabled(false, false, false);
+  // Hide action buttons during dealer's turn
+  elements.actionButtons.classList.remove('active');
   gameState.phase = 'dealerTurn';
 
   await revealDealerHoleCard();
@@ -337,7 +345,8 @@ async function doubleDown() {
   if (gameState.phase !== 'playerTurn') return;
   if (gameState.bankroll < gameState.currentBet) return;
 
-  setButtonsEnabled(false, false, false);
+  // Hide action buttons during double down
+  elements.actionButtons.classList.remove('active');
 
   // Double the bet
   gameState.bankroll -= gameState.currentBet;
@@ -474,9 +483,7 @@ function restart() {
   elements.dealerHand.classList.remove('winner', 'loser');
   elements.playerHand.classList.remove('winner', 'loser');
 
-  elements.btnRestart.style.display = 'none';
   showDealButton();
-  setButtonsEnabled(false, false, false);
   gameState.phase = 'betting';
 }
 
