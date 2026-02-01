@@ -1,0 +1,474 @@
+/* Bird Card Blackjack - Styles */
+
+:root {
+  /* Primary palette */
+  --color-green: #025b2a;
+  --color-green-dark: #024421;
+  --color-green-light: #036b32;
+  --color-red: #c8102e;
+  --color-gold: #ffcd00;
+  --color-black: #231f20;
+  --color-white: #f8f9fd;
+
+  /* Secondary */
+  --color-brown: #996c2e;
+  --color-blue: #004c97;
+
+  /* Derived */
+  --color-green-felt: #025b2a;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+
+  /* Typography */
+  --font-primary: 'Copperplate', 'Copperplate Gothic Bold', 'Copperplate Gothic', serif;
+
+  /* Card dimensions */
+  --card-width: 80px;
+  --card-height: 112px;
+  --card-gap: -30px;
+  --card-border-radius: 8px;
+
+  /* Animation timing */
+  --deal-duration: 0.4s;
+  --flip-duration: 0.5s;
+  --slide-duration: 0.3s;
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base */
+html, body {
+  height: 100%;
+  font-family: var(--font-primary);
+  background: var(--color-green-dark);
+  color: var(--color-white);
+  overflow: hidden;
+}
+
+/* Game Container */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--color-green-felt);
+  background-image:
+    radial-gradient(ellipse at center, var(--color-green-light) 0%, var(--color-green) 50%, var(--color-green-dark) 100%);
+  position: relative;
+}
+
+/* Header */
+.game-header {
+  padding: 16px;
+  text-align: center;
+  background: var(--color-green-dark);
+  border-bottom: 3px solid var(--color-gold);
+}
+
+.game-header h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  text-shadow: 2px 2px 4px var(--color-shadow);
+}
+
+/* Game Table */
+.game-table {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  position: relative;
+  min-height: 0;
+}
+
+/* Hand Areas */
+.dealer-area,
+.player-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dealer-area {
+  padding-top: 10px;
+}
+
+.player-area {
+  padding-bottom: 10px;
+  flex-direction: column-reverse;
+}
+
+.hand-label {
+  font-size: 0.875rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.hand-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--color-gold);
+  min-height: 1.5rem;
+}
+
+/* Card Hands */
+.hand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: var(--card-height);
+  position: relative;
+}
+
+.hand .card {
+  margin-left: var(--card-gap);
+}
+
+.hand .card:first-child {
+  margin-left: 0;
+}
+
+/* Cards */
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  border-radius: var(--card-border-radius);
+  box-shadow: 0 4px 8px var(--color-shadow);
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform var(--flip-duration) ease-in-out;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.card-face,
+.card-back {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  backface-visibility: hidden;
+  border-radius: var(--card-border-radius);
+  overflow: hidden;
+}
+
+.card-face {
+  background: var(--color-white);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+.card-face img,
+.card-back img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Card flipped state */
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+/* Card dealing animation */
+.card.dealing {
+  animation: dealCard var(--deal-duration) ease-out forwards;
+}
+
+@keyframes dealCard {
+  0% {
+    transform: translateX(300px) translateY(-100px) rotate(15deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Card hit animation */
+.card.hitting {
+  animation: hitCard var(--slide-duration) ease-out forwards;
+}
+
+@keyframes hitCard {
+  0% {
+    transform: translateX(200px) rotate(10deg);
+    opacity: 0;
+  }
+  70% {
+    transform: translateX(-5px) rotate(-2deg);
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Result Message */
+.result-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 3px 3px 6px var(--color-shadow);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.result-message.show {
+  animation: showResult 0.5s ease-out forwards;
+}
+
+.result-message.win {
+  color: var(--color-gold);
+}
+
+.result-message.lose {
+  color: var(--color-red);
+}
+
+.result-message.push {
+  color: var(--color-white);
+}
+
+.result-message.blackjack {
+  color: var(--color-gold);
+  font-size: 2.5rem;
+  text-shadow:
+    0 0 20px var(--color-gold),
+    3px 3px 6px var(--color-shadow);
+}
+
+@keyframes showResult {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Win/Lose hand animations */
+.hand.winner .card {
+  animation: winPulse 0.6s ease-in-out;
+}
+
+@keyframes winPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 8px var(--color-shadow);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--color-gold);
+  }
+}
+
+.hand.loser .card {
+  animation: loseShake 0.4s ease-in-out;
+}
+
+@keyframes loseShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+/* Game Controls */
+.game-controls {
+  padding: 20px;
+  background: var(--color-green-dark);
+  border-top: 3px solid var(--color-gold);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Bankroll Display */
+.bankroll-display {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 1rem;
+}
+
+.bankroll-label {
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.75rem;
+}
+
+.bankroll-amount {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-gold);
+  transition: color 0.3s, transform 0.3s;
+}
+
+.bankroll-amount.winning {
+  color: var(--color-gold);
+  animation: bankrollUp 0.5s ease-out;
+}
+
+.bankroll-amount.losing {
+  color: var(--color-red);
+  animation: bankrollDown 0.5s ease-out;
+}
+
+@keyframes bankrollUp {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bankrollDown {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.bet-info {
+  opacity: 0.6;
+  font-size: 0.875rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Buttons */
+.btn {
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-hit {
+  background: var(--color-white);
+  color: var(--color-black);
+}
+
+.btn-hit:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(248, 249, 253, 0.3);
+}
+
+.btn-stand {
+  background: var(--color-red);
+  color: var(--color-white);
+}
+
+.btn-stand:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(200, 16, 46, 0.4);
+}
+
+.btn-double {
+  background: var(--color-gold);
+  color: var(--color-black);
+}
+
+.btn-double:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(255, 205, 0, 0.4);
+}
+
+.btn-deal {
+  background: var(--color-gold);
+  color: var(--color-black);
+  width: 100%;
+  padding: 16px;
+  font-size: 1.125rem;
+}
+
+.btn-deal:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(255, 205, 0, 0.4);
+}
+
+.btn-restart {
+  background: var(--color-blue);
+  color: var(--color-white);
+  width: 100%;
+  padding: 16px;
+  font-size: 1.125rem;
+}
+
+.btn-restart:hover {
+  box-shadow: 0 4px 16px rgba(0, 76, 151, 0.4);
+}
+
+/* Desktop Adjustments */
+@media (min-width: 768px) {
+  :root {
+    --card-width: 100px;
+    --card-height: 140px;
+    --card-gap: -40px;
+  }
+
+  .game-header h1 {
+    font-size: 2rem;
+  }
+
+  .result-message {
+    font-size: 3rem;
+  }
+
+  .result-message.blackjack {
+    font-size: 3.5rem;
+  }
+}
+
+/* Tall phone screens - give more space to game table */
+@media (min-height: 700px) {
+  .game-table {
+    padding: 30px 20px;
+  }
+}
