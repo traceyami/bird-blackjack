@@ -21,10 +21,10 @@
   /* Typography */
   --font-primary: 'Copperplate', 'Copperplate Gothic Bold', 'Copperplate Gothic', serif;
 
-  /* Card dimensions */
-  --card-width: 80px;
-  --card-height: 112px;
-  --card-gap: -30px;
+  /* Card dimensions - bigger cards */
+  --card-width: 120px;
+  --card-height: 168px;
+  --card-gap: -45px;
   --card-border-radius: 8px;
 
   /* Animation timing */
@@ -80,10 +80,10 @@ html, body {
 /* Felt branding - flat print on felt */
 .felt-branding {
   position: absolute;
-  top: 42%;
+  top: 46%;
   left: 50%;
   transform: translate(-50%, -50%);
-  height: 45px;
+  height: 30px;
   width: auto;
   opacity: 0.9;
   pointer-events: none;
@@ -93,12 +93,12 @@ html, body {
 /* Felt title - screen printed below logo */
 .felt-title {
   position: absolute;
-  top: calc(42% + 30px);
+  top: calc(46% + 18px);
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-primary);
-  font-size: 1.1rem;
-  letter-spacing: 0.25em;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-gold);
   opacity: 0.9;
@@ -106,15 +106,57 @@ html, body {
   z-index: 0;
 }
 
+/* Bankroll - screen-printed on felt */
+.felt-bankroll {
+  position: absolute;
+  top: 28px;
+  right: 24px;
+  text-align: right;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.felt-bankroll-label {
+  font-family: var(--font-primary);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+
+.felt-bankroll-amount {
+  font-family: var(--font-primary);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  opacity: 0.9;
+}
+
 /* Felt branding responsive */
 @media (min-width: 768px) {
   .felt-branding {
-    height: 65px;
+    height: 45px;
+    top: 48%;
   }
 
   .felt-title {
-    top: calc(42% + 45px);
-    font-size: 1.4rem;
+    top: calc(48% + 28px);
+    font-size: 1rem;
+  }
+
+  .felt-bankroll {
+    top: 36px;
+    right: 30px;
+  }
+
+  .felt-bankroll-label {
+    font-size: 0.7rem;
+  }
+
+  .felt-bankroll-amount {
+    font-size: 1.3rem;
   }
 }
 
@@ -153,27 +195,13 @@ body.with-rail .felt-table::after {
   z-index: 1;
 }
 
-/* Header */
-.game-header {
-  padding: 18px 16px;
-  text-align: center;
-  background: var(--color-green-dark);
-  border-bottom: 3px solid var(--color-gold);
-}
-
-.header-logo {
-  height: 40px;
-  width: auto;
-  filter: drop-shadow(2px 3px 2px var(--color-shadow));
-}
-
 /* Game Table */
 .game-table {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 20px;
+  padding: 15px;
   position: relative;
   min-height: 0;
 }
@@ -188,12 +216,12 @@ body.with-rail .felt-table::after {
 }
 
 .dealer-area {
-  padding-top: 10px;
+  padding-top: 12px;
 }
 
 .player-area {
+  flex-direction: column;
   padding-bottom: 10px;
-  flex-direction: column-reverse;
 }
 
 .hand-label {
@@ -204,7 +232,7 @@ body.with-rail .felt-table::after {
 }
 
 .hand-value {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: bold;
   color: var(--color-gold);
   min-height: 1.5rem;
@@ -212,8 +240,8 @@ body.with-rail .felt-table::after {
 
 /* Card Hands */
 .hand {
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
+  justify-content: flex-start;
   align-items: center;
   min-height: var(--card-height);
   position: relative;
@@ -221,6 +249,7 @@ body.with-rail .felt-table::after {
 
 .hand .card {
   margin-left: var(--card-gap);
+  transition: none;
 }
 
 .hand .card:first-child {
@@ -316,7 +345,7 @@ body.with-rail .felt-table::after {
   top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -325,11 +354,13 @@ body.with-rail .felt-table::after {
   pointer-events: none;
   z-index: 10;
   background: var(--color-green);
-  min-width: 280px;
-  padding: 50px 70px;
+  min-width: 220px;
+  max-width: 90vw;
+  padding: 30px 50px;
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
 }
 
 .result-message.show {
@@ -345,13 +376,18 @@ body.with-rail .felt-table::after {
   background: #1a1210;
 }
 
+.result-message.bust {
+  color: #ff6b6b;
+  background: #1a1210;
+}
+
 .result-message.push {
   color: var(--color-white);
 }
 
 .result-message.blackjack {
   color: var(--color-gold);
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   text-shadow:
     0 0 20px var(--color-gold),
     3px 3px 6px var(--color-shadow);
@@ -401,68 +437,19 @@ body.with-rail .felt-table::after {
 
 /* Game Controls */
 .game-controls {
-  padding: 20px;
+  padding: 12px 20px;
   background: var(--color-green-dark);
-  border-top: 3px solid var(--color-gold);
+  border-top: 3px solid var(--color-brown);
+  box-shadow: inset 0 2px 0 0 #4a3a1a;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-/* Bankroll Display */
-.bankroll-display {
-  display: flex;
-  justify-content: center;
-  align-items: baseline;
   gap: 12px;
-  font-size: 1rem;
-}
-
-.bankroll-label {
-  opacity: 0.8;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 0.75rem;
-}
-
-.bankroll-amount {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--color-gold);
-  transition: color 0.3s, transform 0.3s;
-}
-
-.bankroll-amount.winning {
-  color: var(--color-gold);
-  animation: bankrollUp 0.5s ease-out;
-}
-
-.bankroll-amount.losing {
-  color: var(--color-red);
-  animation: bankrollDown 0.5s ease-out;
-}
-
-@keyframes bankrollUp {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-@keyframes bankrollDown {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.9); }
-  100% { transform: scale(1); }
-}
-
-.bet-info {
-  opacity: 0.6;
-  font-size: 0.875rem;
 }
 
 /* Button Area - swaps between deal/action/restart */
 .button-area {
   position: relative;
-  min-height: 52px;
+  min-height: 48px;
 }
 
 .button-area > * {
@@ -491,11 +478,11 @@ body.with-rail .felt-table::after {
 /* Buttons */
 .btn {
   font-family: var(--font-primary);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: bold;
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 14px 28px;
+  padding: 12px 24px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -542,8 +529,8 @@ body.with-rail .felt-table::after {
   background: var(--color-gold);
   color: var(--color-black);
   width: 100%;
-  padding: 16px;
-  font-size: 1.125rem;
+  padding: 14px 32px;
+  font-size: 1rem;
 }
 
 .btn-deal:hover:not(:disabled) {
@@ -554,8 +541,8 @@ body.with-rail .felt-table::after {
   background: var(--color-blue);
   color: var(--color-white);
   width: 100%;
-  padding: 16px;
-  font-size: 1.125rem;
+  padding: 14px 32px;
+  font-size: 1rem;
 }
 
 .btn-restart:hover {
@@ -565,27 +552,28 @@ body.with-rail .felt-table::after {
 /* Desktop Adjustments */
 @media (min-width: 768px) {
   :root {
-    --card-width: 100px;
-    --card-height: 140px;
-    --card-gap: -40px;
+    --card-width: 160px;
+    --card-height: 224px;
+    --card-gap: -65px;
   }
 
-  .header-logo {
-    height: 50px;
+  .hand-value {
+    font-size: 1.1rem;
   }
 
   .result-message {
-    font-size: 3rem;
+    font-size: 2rem;
+    padding: 40px 70px;
   }
 
   .result-message.blackjack {
-    font-size: 3.5rem;
+    font-size: 2.5rem;
   }
 }
 
 /* Tall phone screens - give more space to game table */
 @media (min-height: 700px) {
   .game-table {
-    padding: 30px 20px;
+    padding: 20px 15px;
   }
 }

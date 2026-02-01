@@ -321,7 +321,7 @@ async function hit() {
 
   if (isBusted(gameState.playerHand)) {
     await revealDealerHoleCard();
-    endGame('lose');
+    endGame('bust');
     return;
   }
 
@@ -362,7 +362,7 @@ async function doubleDown() {
 
   if (isBusted(gameState.playerHand)) {
     await revealDealerHoleCard();
-    endGame('lose');
+    endGame('bust');
     // Reset bet
     gameState.currentBet = 25;
     return;
@@ -431,6 +431,11 @@ function endGame(result) {
       winnings = gameState.currentBet * 2; // Original + 1:1
       elements.playerHand.classList.add('winner');
       elements.dealerHand.classList.add('loser');
+      break;
+    case 'bust':
+      message = 'Bust';
+      winnings = 0;
+      elements.playerHand.classList.add('loser');
       break;
     case 'lose':
       message = 'Dealer Wins';

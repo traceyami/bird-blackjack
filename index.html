@@ -11,6 +11,12 @@
   <div class="felt-table">
     <img src="assets/logo.svg" alt="birb" class="felt-branding">
     <div class="felt-title">Blackjack</div>
+
+    <!-- Bankroll screen-printed on felt -->
+    <div class="felt-bankroll">
+      <div class="felt-bankroll-label">Bankroll</div>
+      <div class="felt-bankroll-amount" id="bankroll">$500</div>
+    </div>
   </div>
   <div class="game-container">
 
@@ -24,9 +30,8 @@
 
       <!-- Player Area -->
       <section class="player-area">
-        <div class="hand player-hand" id="player-hand"></div>
         <div class="hand-value" id="player-value"></div>
-        <div class="hand-label">Your Hand</div>
+        <div class="hand player-hand" id="player-hand"></div>
       </section>
 
       <!-- Result Message -->
@@ -34,22 +39,15 @@
     </main>
 
     <footer class="game-controls">
-      <!-- Bankroll Display -->
-      <div class="bankroll-display">
-        <span class="bankroll-label">Bankroll</span>
-        <span class="bankroll-amount" id="bankroll">$500</span>
-        <span class="bet-info">Bet: $25</span>
-      </div>
-
-      <!-- Button Area (swaps between deal and action buttons) -->
+      <!-- Button Area -->
       <div class="button-area">
-        <button class="btn btn-deal" id="btn-deal">Deal Hand</button>
+        <button class="btn btn-deal" id="btn-deal">Deal · $25</button>
         <div class="action-buttons" id="action-buttons">
           <button class="btn btn-hit" id="btn-hit">Hit</button>
           <button class="btn btn-stand" id="btn-stand">Stand</button>
           <button class="btn btn-double" id="btn-double">2X</button>
         </div>
-        <button class="btn btn-restart" id="btn-restart">Start Over ($500)</button>
+        <button class="btn btn-restart" id="btn-restart">Start Over · $500</button>
       </div>
     </footer>
   </div>

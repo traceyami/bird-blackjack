@@ -50,7 +50,12 @@ From birb cards marketing materials:
 
 ## Working Style
 
-- When prototyping design variations, create separate files (e.g., `prototype-a.html`, `prototype-b.html`) instead of modifying the original — allows side-by-side comparison without losing work
+**IMPORTANT: Never push to GitHub unless explicitly told to.** Always prototype changes locally first using prototype files. Only commit and push when Tracey says the changes are ready.
+
+- Create prototype files (e.g., `prototype-layout.html`) for testing design changes
+- Use `<style>` overrides in prototype files to test CSS changes without modifying `styles.css`
+- Allow side-by-side comparison of variations before committing to changes
+- When enough changes feel good together, Tracey will ask to update the main files and push
 
 ## Game Rules (MVP)
 
@@ -58,6 +63,11 @@ From birb cards marketing materials:
 - Actions: Hit, Stand, Double Down (no split yet)
 - Dealer hits on 16 or less, stands on 17+
 - Blackjack pays 3:2
+
+## TODO / Reminders
+
+- [ ] **Fix 3 of diamonds card** — `assets/cards/diamonds_3.png` is missing its white background
+- [ ] **Smooth card dealing animation** — First card slides jerkily when second card is dealt; needs smoother repositioning
 
 ## Current State
 
