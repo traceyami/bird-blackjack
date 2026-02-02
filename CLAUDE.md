@@ -66,8 +66,9 @@ From birb cards marketing materials:
 
 ## TODO / Reminders
 
-- [ ] **Fix 3 of diamonds card** — `assets/cards/diamonds_3.png` is missing its white background
+- [x] **Fix 3 of diamonds card** — `assets/cards/diamonds_3.png` is missing its white background
 - [ ] **Smooth card dealing animation** — First card slides jerkily when second card is dealt; needs smoother repositioning
+- [ ] **Dynamic card overlap** — When hitting multiple times, cards should compress/overlap more to stay within table bounds instead of going off-screen
 
 ## Current State
 
