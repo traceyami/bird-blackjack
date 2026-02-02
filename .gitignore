@@ -1,0 +1,7 @@
+# Private/local files
+CLAUDE.md
+TODO.md
+prototype-*.html
+
+# OS files
+.DS_Store
