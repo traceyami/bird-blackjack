@@ -5,9 +5,11 @@ Mobile-friendly Blackjack web app featuring Tracey's hand-illustrated bird playi
 **Live site:** [traceyami.github.io/bird-blackjack](https://traceyami.github.io/bird-blackjack)
 **Repo:** [github.com/traceyami/bird-blackjack](https://github.com/traceyami/bird-blackjack)
 
+**Note:** This is a laptop-only project. Development happens on the MacBook Air.
+
 ## Quick Commands
 
-Tracey has shell shortcuts set up on both machines:
+Tracey has shell shortcuts set up:
 
 ```bash
 sync                      # pull latest before working
@@ -27,10 +29,10 @@ save "what you changed"   # commit and push
 
 ```
 bird-blackjack/
-├── index.html      # Single page app
-├── styles.css      # Layout, animations, brand colors
-├── game.js         # Game logic and state
-├── assets/cards/   # 55 bird card PNGs (52 + back + 2 jokers)
+├── index.html           # Bird in the Hand (main game, inline JS/CSS)
+├── styles.css           # Base layout and brand colors
+├── assets/cards/        # 55 bird card PNGs (52 + back + 2 jokers)
+├── blackjack-original/  # Backup of original MVP
 └── README.md
 ```
 
@@ -68,7 +70,7 @@ From birb cards marketing materials:
 
 ## Bird in the Hand (Collection Mode)
 
-**Status:** Prototyped in `prototype-bird.html`, not yet merged to main
+**Status:** Live as main game in `index.html`
 
 A bingo-style collection mechanic layered on top of blackjack:
 
@@ -89,8 +91,9 @@ A bingo-style collection mechanic layered on top of blackjack:
 - Run ends when bankroll < minimum bet
 
 ### Key Files
-- `prototype-bird.html` — Full working prototype (HTML + inline JS/CSS)
-- Uses same card assets and base styles as main game
+- `index.html` — Main game (HTML + inline JS/CSS)
+- `prototype-bird.html` — Working prototype for testing changes
+- Uses same card assets and base styles
 
 ### Code Patterns
 - Clear `playerHand`/`dealerHand` arrays at end of `endHand()` to remove lingering UI states
@@ -111,12 +114,13 @@ See [TODO.md](TODO.md) for current tasks and ideas.
 
 ## Current State
 
-MVP complete and deployed:
-- Full game loop working
+Bird in the Hand is live:
+- Bingo collection mechanic working
+- Joker wild cards with player choice
+- Escalating bet pressure
 - Card dealing and flip animations
-- Session storage persists bankroll
 - Mobile-responsive layout
-- "Broke" state with restart option
+- Original blackjack MVP backed up in `blackjack-original/`
 
 ## Future Ideas
 
