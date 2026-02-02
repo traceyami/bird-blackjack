@@ -21,6 +21,8 @@ save "what you changed"   # commit and push
 - Session storage for bankroll persistence
 - GitHub Pages for hosting
 
+**Safari Gotcha:** CSS class-based `display: none` can be unreliable. Use inline `element.style.display` in JavaScript for cross-browser consistency.
+
 ## File Structure
 
 ```
@@ -32,7 +34,7 @@ bird-blackjack/
 └── README.md
 ```
 
-**Card naming:** `{suit}_{rank}.png` (e.g., `hearts_A.png`, `spades_K.png`) + `back.png`
+**Card naming:** `{suit}_{rank}.png` (e.g., `hearts_A.png`, `spades_K.png`) + `back.png` + `joker_color.png` + `joker_black.png`
 
 ## Brand Colors
 
@@ -64,11 +66,48 @@ From birb cards marketing materials:
 - Dealer hits on 16 or less, stands on 17+
 - Blackjack pays 3:2
 
-## TODO / Reminders
+## Bird in the Hand (Collection Mode)
 
-- [x] **Fix 3 of diamonds card** — `assets/cards/diamonds_3.png` is missing its white background
-- [ ] **Smooth card dealing animation** — First card slides jerkily when second card is dealt; needs smoother repositioning
-- [ ] **Dynamic card overlap** — When hitting multiple times, cards should compress/overlap more to stay within table bounds instead of going off-screen
+**Status:** Prototyped in `prototype-bird.html`, not yet merged to main
+
+A bingo-style collection mechanic layered on top of blackjack:
+
+### Core Mechanics
+- **Bird Cards:** J, Q, K of each suit (12 total, 9 randomly placed on 3x3 board)
+- **Capture:** Win or push a hand → capture any board birds in your hand
+- **Bust:** Lose the birds in your hand (they stay uncaptured)
+- **Win Condition:** Complete a line of 3 (row, column, or diagonal)
+
+### Joker Wild Cards
+- 2 jokers in deck (`joker_color.png`, `joker_black.png`), only dealt to player
+- Joker appears in hand → animates to "pending" area
+- Win the hand → choose any empty cell for your wild bird
+- Jokers removed from deck once captured (max 2 per run)
+
+### Escalating Pressure
+- Minimum bet increases every 2 hands: $25 → $50 → $100 → $200 → $400
+- Run ends when bankroll < minimum bet
+
+### Key Files
+- `prototype-bird.html` — Full working prototype (HTML + inline JS/CSS)
+- Uses same card assets and base styles as main game
+
+### Code Patterns
+- Clear `playerHand`/`dealerHand` arrays at end of `endHand()` to remove lingering UI states
+- Joker cells tracked in `gameState.jokerCells` as `{ cellIndex: jokerType }` map — shows ★ in mini-grid, correct joker image in full board
+- Two jokers are distinct: track per type with `gameState.jokersCaptured = { color: false, black: false }`
+- Don't glow/highlight birds that cause a bust — they weren't an "opportunity"
+- Show inline result ~1.5s before capture/joker modal so player can grok the hand outcome first
+
+### UI Components
+- **Mini-grid:** Top-left corner, shows 3x3 board state, click to expand
+- **Result system:** Tiered — joker modal (blocking) → capture modal (blocking) → inline result (non-blocking)
+- **Game over modal:** Win/lose screen with final board state
+- **Hand values:** Soft hands show both values (e.g., "7/17" for A-6)
+
+## TODO
+
+See [TODO.md](TODO.md) for current tasks and ideas.
 
 ## Current State
 
