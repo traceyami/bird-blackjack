@@ -3,55 +3,2506 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bird Card Blackjack</title>
+  <title>Bird in the Hand</title>
   <link rel="stylesheet" href="https://use.typekit.net/bmv5fsi.css">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Bird in the Hand - Prototype Overrides */
+
+    /* Update title */
+    .felt-title {
+      display: none;
+    }
+
+    /* Bingo System Container - unified mini-grid + joker pending */
+    .bingo-system {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Mini Bingo Board on Felt */
+    .bingo-mini {
+      display: grid;
+      grid-template-columns: repeat(3, 32px);
+      grid-template-rows: repeat(3, 28px);
+      gap: 3px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .bingo-system:not(.joker-pending) .bingo-mini {
+      border-radius: 8px;
+    }
+
+    .bingo-mini:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .bingo-system.joker-pending .bingo-mini:hover {
+      transform: none;
+    }
+
+    .bingo-mini-cell {
+      width: 32px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+      color: rgba(255, 255, 255, 0.5);
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .bingo-mini-cell .suit {
+      font-size: 0.78em;
+      font-weight: normal;
+      margin-left: 1px;
+    }
+
+    .bingo-mini-cell.captured {
+      background: var(--color-gold);
+      color: var(--color-black);
+    }
+
+    .bingo-mini-cell.in-hand {
+      box-shadow: 0 0 8px var(--color-gold);
+      animation: pulse-glow 1s infinite;
+    }
+
+    /* When joker is pending, ALL empty cells glow */
+    .bingo-system.joker-pending .bingo-mini-cell:not(.captured) {
+      box-shadow: 0 0 8px var(--color-gold);
+      animation: pulse-glow 1s infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 8px var(--color-gold); }
+      50% { box-shadow: 0 0 16px var(--color-gold), 0 0 24px rgba(255, 205, 0, 0.5); }
+    }
+
+    /* Hand Counter & Bet Display */
+    .game-info {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      text-align: left;
+      z-index: 5;
+    }
+
+    .hand-counter {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      opacity: 0.7;
+    }
+
+    .min-bet-display {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--color-white);
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    /* Full Bingo Board Modal */
+    .bingo-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .bingo-modal.show {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .bingo-modal-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Hide title during joker selection */
+    .bingo-modal.joker-selection .bingo-title {
+      display: none;
+    }
+
+    .bingo-board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 140px);
+      gap: 10px;
+      padding: 20px;
+      background: var(--color-green-dark);
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .bingo-cell {
+      position: relative;
+      width: 100px;
+      height: 140px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .bingo-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.3;
+      filter: grayscale(100%);
+      transition: all 0.3s;
+    }
+
+    .bingo-cell.captured img {
+      opacity: 1;
+      filter: none;
+    }
+
+    .bingo-cell.captured::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 3px solid var(--color-gold);
+      border-radius: 8px;
+      box-shadow: inset 0 0 20px rgba(255, 205, 0, 0.3);
+    }
+
+    .bingo-cell.winning-line {
+      animation: winning-pulse 0.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes winning-pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); box-shadow: 0 0 30px var(--color-gold); }
+    }
+
+    /* Joker Landing Animation */
+    .bingo-cell.joker-landing {
+      animation: joker-land 0.8s ease-out forwards;
+    }
+
+    @keyframes joker-land {
+      0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+      50% { transform: scale(1.2) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .bingo-cell.joker-landing img {
+      opacity: 1;
+      filter: none;
+    }
+
+    .bingo-cell.joker-landing::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 3px solid var(--color-gold);
+      border-radius: 8px;
+      animation: joker-glow 0.8s ease-out forwards;
+    }
+
+    @keyframes joker-glow {
+      0% { box-shadow: 0 0 60px var(--color-gold); }
+      100% { box-shadow: inset 0 0 20px rgba(255, 205, 0, 0.3); }
+    }
+
+    /* Close button for modal */
+    .bingo-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 2rem;
+      color: var(--color-white);
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .bingo-close:hover {
+      opacity: 1;
+    }
+
+    /* Hide close button during joker selection */
+    .bingo-modal.joker-selection .bingo-close {
+      display: none;
+    }
+
+    /* Joker selection hero area */
+    .joker-selection-hero {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .bingo-modal.joker-selection .joker-selection-hero {
+      display: flex;
+    }
+
+    .joker-selection-hero .joker-hero-card {
+      width: 80px;
+      height: 112px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 205, 0, 0.3);
+      border: 2px solid var(--color-gold);
+    }
+
+    .joker-selection-hero .joker-hero-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .joker-selection-prompt {
+      background: var(--color-gold);
+      color: var(--color-black);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Selectable empty cells during joker selection */
+    .bingo-modal.joker-selection .bingo-cell:not(.captured) {
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .bingo-modal.joker-selection .bingo-cell:not(.captured):hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--color-gold);
+    }
+
+    .bingo-modal.joker-selection .bingo-cell:not(.captured):active {
+      transform: scale(0.98);
+    }
+
+    /* Board title */
+    .bingo-title {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-primary);
+      font-size: 1.2rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+    }
+
+    /* Progress indicator */
+    .bingo-progress {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      color: var(--color-white);
+      opacity: 0.8;
+    }
+
+    /* Joker card slide away animation - slides toward top-left */
+    .card.joker-slide-away {
+      animation: joker-slide 0.6s ease-in forwards;
+    }
+
+    @keyframes joker-slide {
+      0% {
+        transform: translateX(0) translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-400px) translateY(-300px) scale(0.3);
+        opacity: 0;
+      }
+    }
+
+    /* Joker pending indicator - stacked below mini-grid */
+    #joker-pending {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px;
+      border-radius: 0 0 8px 8px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-top: 1px solid rgba(255, 205, 0, 0.3);
+    }
+
+    #joker-pending .joker-pending-icon {
+      width: 52px;
+      height: 73px;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    #joker-pending .joker-pending-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #joker-pending .joker-pending-text {
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-gold);
+      line-height: 1.3;
+      text-align: center;
+    }
+
+    /* Bird card glow in hand - PLAYER ONLY */
+    .player-hand .card.board-bird::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 3px solid var(--color-gold);
+      border-radius: calc(var(--card-border-radius) + 4px);
+      box-shadow: 0 0 20px var(--color-gold);
+      animation: bird-glow 1.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes bird-glow {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; box-shadow: 0 0 30px var(--color-gold); }
+    }
+
+    /* ===========================================
+       INLINE RESULT MESSAGE (non-blocking, simple outcomes)
+       =========================================== */
+
+    .result-message {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 16px 24px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 12px;
+      animation: result-fade-in 0.3s ease-out;
+    }
+
+    .result-message.show {
+      display: flex;
+    }
+
+    @keyframes result-fade-in {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .result-message .result-primary {
+      font-family: var(--font-primary);
+      font-size: 1.4rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-white);
+    }
+
+    .result-message.win .result-primary {
+      color: var(--color-gold);
+      text-shadow: 0 0 15px rgba(255, 205, 0, 0.5);
+    }
+
+    .result-message.lose .result-primary {
+      color: #ff6b6b;
+    }
+
+    .result-message .result-secondary {
+      font-size: 0.85rem;
+      color: var(--color-white);
+      opacity: 0.8;
+      letter-spacing: 0.05em;
+    }
+
+    .result-message .result-secondary.danger {
+      color: #ff6b6b;
+      animation: danger-pulse 0.5s ease-in-out 3;
+    }
+
+    @keyframes danger-pulse {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; color: #ff4444; }
+    }
+
+    /* ===========================================
+       CAPTURE/JOKER MODAL (blocking, special moments)
+       =========================================== */
+
+    .result-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .result-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .result-modal-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 32px;
+      background: linear-gradient(135deg, rgba(2, 91, 42, 0.95), rgba(1, 60, 28, 0.98));
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 90vw;
+      animation: modal-pop 0.3s ease-out;
+    }
+
+    @keyframes modal-pop {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Hide all result sections by default */
+    .result-capture,
+    .result-joker {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Show appropriate section based on modal variant */
+    .result-modal.capture .result-capture,
+    .result-modal.joker .result-joker {
+      display: flex;
+    }
+
+    /* Headline styles */
+    .result-headline {
+      font-family: var(--font-primary);
+      font-size: 1.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      text-shadow: 0 0 30px rgba(255, 205, 0, 0.6);
+      text-align: center;
+      animation: headline-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes headline-pulse {
+      0%, 100% { text-shadow: 0 0 20px rgba(255, 205, 0, 0.4); }
+      50% { text-shadow: 0 0 40px rgba(255, 205, 0, 0.8), 0 0 60px rgba(255, 205, 0, 0.4); }
+    }
+
+    /* Subtext styles */
+    .result-subtext {
+      font-size: 0.9rem;
+      color: var(--color-white);
+      opacity: 0.9;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+
+    .result-subtext.danger {
+      color: #ff6b6b;
+    }
+
+    /* Result Grid (for capture/joker variants) */
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-template-rows: repeat(3, 112px);
+      gap: 8px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+    }
+
+    .result-grid-cell {
+      position: relative;
+      width: 80px;
+      height: 112px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .result-grid-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.3;
+      filter: grayscale(100%);
+      transition: all 0.3s;
+    }
+
+    .result-grid-cell.captured img {
+      opacity: 1;
+      filter: none;
+    }
+
+    .result-grid-cell.captured::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 2px solid var(--color-gold);
+      border-radius: 6px;
+      box-shadow: inset 0 0 15px rgba(255, 205, 0, 0.2);
+    }
+
+    /* Just-captured cell celebration */
+    .result-grid-cell.just-captured {
+      animation: capture-cell-bounce 0.6s ease-out;
+    }
+
+    .result-grid-cell.just-captured::after {
+      animation: capture-glow 1.5s ease-in-out infinite;
+    }
+
+    @keyframes capture-cell-bounce {
+      0% { transform: scale(0.8); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes capture-glow {
+      0%, 100% {
+        box-shadow: inset 0 0 15px rgba(255, 205, 0, 0.3), 0 0 15px rgba(255, 205, 0, 0.4);
+      }
+      50% {
+        box-shadow: inset 0 0 20px rgba(255, 205, 0, 0.5), 0 0 30px rgba(255, 205, 0, 0.7);
+      }
+    }
+
+    /* Joker selection - hero area */
+    .joker-hero {
+      width: 70px;
+      height: 98px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 205, 0, 0.3);
+      border: 2px solid var(--color-gold);
+    }
+
+    .joker-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Joker selection - selectable empty cells */
+    .result-modal.joker .result-grid-cell:not(.captured) {
+      cursor: pointer;
+      animation: empty-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes empty-pulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(255, 205, 0, 0.3); }
+      50% { box-shadow: 0 0 20px rgba(255, 205, 0, 0.6); }
+    }
+
+    .result-modal.joker .result-grid-cell:not(.captured):hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(255, 205, 0, 0.8);
+    }
+
+    .result-modal.joker .result-grid-cell:not(.captured):active {
+      transform: scale(0.98);
+    }
+
+    /* Joker landing animation in result grid */
+    .result-grid-cell.joker-landing {
+      animation: joker-cell-land 0.8s ease-out forwards;
+    }
+
+    .result-grid-cell.joker-landing img {
+      opacity: 1;
+      filter: none;
+    }
+
+    @keyframes joker-cell-land {
+      0% { transform: scale(0.5) rotate(-10deg); }
+      50% { transform: scale(1.15) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    /* Continue button */
+    .result-continue {
+      margin-top: 8px;
+      padding: 12px 32px;
+      font-family: var(--font-primary);
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-black);
+      background: var(--color-gold);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .result-continue:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .result-continue:active {
+      transform: translateY(0);
+    }
+
+    /* Hide button during joker selection */
+    .result-modal.joker .result-continue {
+      display: none;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 400px) {
+      .result-modal-content {
+        padding: 20px 24px;
+        gap: 12px;
+      }
+
+      .result-headline {
+        font-size: 1.3rem;
+      }
+
+      .result-grid {
+        grid-template-columns: repeat(3, 65px);
+        grid-template-rows: repeat(3, 91px);
+        gap: 6px;
+        padding: 10px;
+      }
+
+      .result-grid-cell {
+        width: 65px;
+        height: 91px;
+      }
+
+      .joker-hero {
+        width: 55px;
+        height: 77px;
+      }
+
+      .result-continue {
+        padding: 10px 24px;
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .result-modal-content {
+        padding: 32px 48px;
+        gap: 20px;
+      }
+
+      .result-headline {
+        font-size: 1.8rem;
+      }
+
+      .result-grid {
+        grid-template-columns: repeat(3, 100px);
+        grid-template-rows: repeat(3, 140px);
+        gap: 10px;
+        padding: 16px;
+      }
+
+      .result-grid-cell {
+        width: 100px;
+        height: 140px;
+        border-radius: 8px;
+      }
+
+      .joker-hero {
+        width: 80px;
+        height: 112px;
+      }
+
+      .result-continue {
+        padding: 14px 40px;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Captured bird celebration */
+    .capture-flash {
+      position: fixed;
+      inset: 0;
+      background: var(--color-gold);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    .capture-flash.show {
+      animation: capture-flash 0.4s ease-out;
+    }
+
+    @keyframes capture-flash {
+      0% { opacity: 0.3; }
+      100% { opacity: 0; }
+    }
+
+    /* Win/Lose screens */
+    .game-over-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .game-over-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .game-over-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 32px 40px;
+      background: linear-gradient(135deg, rgba(2, 91, 42, 0.95), rgba(1, 60, 28, 0.98));
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 90vw;
+      animation: modal-pop 0.3s ease-out;
+    }
+
+    .game-over-title {
+      font-family: var(--font-primary);
+      font-size: 1.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .game-over-title.win {
+      color: var(--color-gold);
+      text-shadow: 0 0 30px rgba(255, 205, 0, 0.6);
+      animation: headline-pulse 1.5s ease-in-out infinite;
+    }
+
+    .game-over-title.lose {
+      color: #ff6b6b;
+    }
+
+    .game-over-stats {
+      font-size: 0.9rem;
+      color: var(--color-white);
+      opacity: 0.8;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .game-over-board {
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+    }
+
+    .game-over-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 70px);
+      grid-template-rows: repeat(3, 98px);
+      gap: 6px;
+    }
+
+    .game-over-cell {
+      position: relative;
+      width: 70px;
+      height: 98px;
+      border-radius: 6px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .game-over-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.25;
+      filter: grayscale(100%);
+      transition: all 0.3s;
+    }
+
+    .game-over-cell.captured img {
+      opacity: 1;
+      filter: none;
+    }
+
+    .game-over-cell.captured {
+      border: 2px solid var(--color-gold);
+      box-shadow: inset 0 0 10px rgba(255, 205, 0, 0.2);
+    }
+
+    .game-over-cell.winning img {
+      opacity: 1;
+      filter: none;
+    }
+
+    .game-over-cell.winning {
+      box-shadow: 0 0 20px var(--color-gold);
+      border: 2px solid var(--color-gold);
+      animation: winning-pulse 0.5s ease-in-out infinite alternate;
+    }
+
+    .game-over-modal .btn {
+      margin-top: 8px;
+    }
+
+    /* Update deal button to show current bet */
+    .btn-deal {
+      min-width: 200px;
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .bingo-system {
+        top: 15px;
+        left: 15px;
+      }
+
+      .bingo-mini {
+        grid-template-columns: repeat(3, 28px);
+        grid-template-rows: repeat(3, 24px);
+        gap: 2px;
+        padding: 4px;
+      }
+
+      .bingo-mini-cell {
+        width: 28px;
+        height: 24px;
+        font-size: 8px;
+      }
+
+      #joker-pending .joker-pending-icon {
+        width: 44px;
+        height: 62px;
+      }
+
+      #joker-pending .joker-pending-text {
+        font-size: 0.45rem;
+      }
+
+      #joker-pending {
+        padding: 5px;
+        gap: 4px;
+      }
+
+      .bingo-board {
+        grid-template-columns: repeat(3, 80px);
+        grid-template-rows: repeat(3, 112px);
+        gap: 8px;
+        padding: 15px;
+      }
+
+      .bingo-cell {
+        width: 80px;
+        height: 112px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .bingo-system {
+        top: 30px;
+        left: 30px;
+      }
+
+      .bingo-mini {
+        grid-template-columns: repeat(3, 42px);
+        grid-template-rows: repeat(3, 32px);
+        gap: 4px;
+        padding: 8px;
+      }
+
+      .bingo-mini-cell {
+        width: 42px;
+        height: 32px;
+        font-size: 11px;
+      }
+
+      #joker-pending {
+        padding: 8px;
+        gap: 8px;
+      }
+
+      #joker-pending .joker-pending-icon {
+        width: 65px;
+        height: 91px;
+      }
+
+      #joker-pending .joker-pending-text {
+        font-size: 0.6rem;
+      }
+
+      .bingo-board {
+        grid-template-columns: repeat(3, 120px);
+        grid-template-rows: repeat(3, 168px);
+        gap: 12px;
+      }
+
+      .bingo-cell {
+        width: 120px;
+        height: 168px;
+      }
+
+      .game-info {
+        bottom: 30px;
+        left: 30px;
+      }
+    }
+  </style>
 </head>
 <body class="with-rail">
   <div class="felt-table">
     <img src="assets/logo.svg" alt="birb" class="felt-branding">
-    <div class="felt-title">Blackjack</div>
 
-    <!-- Bankroll screen-printed on felt -->
+    <!-- Bingo System: Mini Board + Joker Pending as one unit -->
+    <div class="bingo-system" id="bingo-system">
+      <div class="bingo-mini" id="bingo-mini" title="Click to view board"></div>
+      <div id="joker-pending" style="display: none;">
+        <div class="joker-pending-icon">
+          <img src="assets/cards/joker_color.png" alt="Joker">
+        </div>
+        <div class="joker-pending-text">Win to claim<br>your free birb</div>
+      </div>
+    </div>
+
+    <!-- Game Info -->
+    <div class="game-info">
+      <div class="hand-counter" id="hand-counter">Hand 1</div>
+      <div class="min-bet-display" id="min-bet-display">Min Bet: $25</div>
+    </div>
+
+    <!-- Bankroll -->
     <div class="felt-bankroll">
       <div class="felt-bankroll-label">Bankroll</div>
       <div class="felt-bankroll-amount" id="bankroll">$500</div>
     </div>
   </div>
-  <div class="game-container">
 
+  <!-- Full Bingo Board Modal -->
+  <div class="bingo-modal" id="bingo-modal">
+    <div class="bingo-close" id="bingo-close">&times;</div>
+    <div class="bingo-title">Bird in the Hand</div>
+    <div class="bingo-modal-content">
+      <div class="joker-selection-hero">
+        <div class="joker-hero-card">
+          <img src="assets/cards/joker_color.png" alt="Joker">
+        </div>
+        <div class="joker-selection-prompt">Tap any cell for your wild bird</div>
+      </div>
+      <div class="bingo-board" id="bingo-board"></div>
+      <div class="bingo-progress" id="bingo-progress"></div>
+    </div>
+  </div>
+
+  <!-- Capture Flash Effect -->
+  <div class="capture-flash" id="capture-flash"></div>
+
+  <!-- Capture/Joker Modal (blocking, special moments) -->
+  <div class="result-modal" id="result-modal">
+    <div class="result-modal-content">
+      <!-- Capture result (with grid) -->
+      <div class="result-capture">
+        <div class="result-headline" id="result-capture-headline">Bird Captured!</div>
+        <div class="result-grid" id="result-capture-grid"></div>
+        <div class="result-subtext" id="result-capture-subtext"></div>
+      </div>
+
+      <!-- Joker selection -->
+      <div class="result-joker">
+        <div class="joker-hero">
+          <img src="assets/cards/joker_color.png" alt="Joker">
+        </div>
+        <div class="result-headline">Choose Your Wild</div>
+        <div class="result-grid selectable" id="result-joker-grid"></div>
+      </div>
+
+      <button class="result-continue" id="result-continue">Deal · $25</button>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div class="game-over-modal" id="game-over-modal">
+    <div class="game-over-content">
+      <div class="game-over-title" id="game-over-title">You Win!</div>
+      <div class="game-over-board" id="game-over-board"></div>
+      <div class="game-over-stats" id="game-over-stats"></div>
+      <button class="btn btn-deal" id="btn-play-again">Play Again</button>
+    </div>
+  </div>
+
+  <div class="game-container">
     <main class="game-table">
-      <!-- Dealer Area -->
       <section class="dealer-area">
         <div class="hand-label">Dealer</div>
         <div class="hand-value" id="dealer-value"></div>
         <div class="hand dealer-hand" id="dealer-hand"></div>
       </section>
 
-      <!-- Player Area -->
       <section class="player-area">
         <div class="hand-value" id="player-value"></div>
         <div class="hand player-hand" id="player-hand"></div>
       </section>
 
-      <!-- Result Message -->
-      <div class="result-message" id="result-message"></div>
+      <!-- Inline result message (non-blocking, simple outcomes) -->
+      <div class="result-message" id="result-message">
+        <div class="result-primary" id="result-primary"></div>
+        <div class="result-secondary" id="result-secondary"></div>
+      </div>
     </main>
 
     <footer class="game-controls">
-      <!-- Button Area -->
       <div class="button-area">
-        <button class="btn btn-deal" id="btn-deal">Deal · $25</button>
+        <button class="btn btn-deal" id="btn-deal">Deal</button>
         <div class="action-buttons" id="action-buttons">
           <button class="btn btn-hit" id="btn-hit">Hit</button>
           <button class="btn btn-stand" id="btn-stand">Stand</button>
           <button class="btn btn-double" id="btn-double">2X</button>
         </div>
-        <button class="btn btn-restart" id="btn-restart">Start Over · $500</button>
+        <button class="btn btn-restart" id="btn-restart">New Run</button>
       </div>
     </footer>
   </div>
 
-  <script src="game.js"></script>
+  <script>
+    /* Bird in the Hand - Game Logic */
+
+    // ===========================================
+    // CONSTANTS
+    // ===========================================
+
+    const SUITS = ['clubs', 'diamonds', 'hearts', 'spades'];
+    const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+    const BIRD_RANKS = ['J', 'Q', 'K'];
+
+    // Suit symbols for display
+    const SUIT_SYMBOLS = {
+      'clubs': '♣',
+      'diamonds': '♦',
+      'hearts': '♥',
+      'spades': '♠'
+    };
+
+    // All 12 possible bird cards
+    const ALL_BIRDS = [];
+    for (const suit of SUITS) {
+      for (const rank of BIRD_RANKS) {
+        ALL_BIRDS.push({ suit, rank, id: `${rank}_${suit}` });
+      }
+    }
+
+    // 8 winning lines on bingo board (indices 0-8)
+    const BINGO_LINES = [
+      [0, 1, 2], // row 0
+      [3, 4, 5], // row 1
+      [6, 7, 8], // row 2
+      [0, 3, 6], // col 0
+      [1, 4, 7], // col 1
+      [2, 5, 8], // col 2
+      [0, 4, 8], // diagonal
+      [2, 4, 6], // anti-diagonal
+    ];
+
+    // Bet escalation schedule (every 2 hands)
+    const BET_SCHEDULE = [25, 50, 100, 200, 400];
+    const BET_INTERVAL = 2;
+
+    // ===========================================
+    // GAME STATE
+    // ===========================================
+
+    const gameState = {
+      bankroll: 500,
+      handNumber: 0,
+      currentBet: 25,
+      deck: [],
+      playerHand: [],
+      dealerHand: [],
+      phase: 'betting',
+      result: null,
+
+      // Bingo state
+      bingoBoard: [],      // 9 bird objects { suit, rank, id }
+      bingoCaptured: [],   // 9 booleans
+      junkBirds: [],       // 3 bird IDs not on board
+
+      // Joker state - track each joker distinctly
+      jokersCaptured: { color: false, black: false },  // which jokers have been captured this run
+      pendingJokers: [],  // array of joker types pending ('color' or 'black')
+      jokerCells: {},  // map of cell index to joker type (e.g., { 4: 'color', 7: 'black' })
+    };
+
+    // ===========================================
+    // DOM ELEMENTS
+    // ===========================================
+
+    const elements = {
+      dealerHand: document.getElementById('dealer-hand'),
+      playerHand: document.getElementById('player-hand'),
+      dealerValue: document.getElementById('dealer-value'),
+      playerValue: document.getElementById('player-value'),
+      bankroll: document.getElementById('bankroll'),
+      btnHit: document.getElementById('btn-hit'),
+      btnStand: document.getElementById('btn-stand'),
+      btnDouble: document.getElementById('btn-double'),
+      btnDeal: document.getElementById('btn-deal'),
+      btnRestart: document.getElementById('btn-restart'),
+      actionButtons: document.getElementById('action-buttons'),
+      bingoSystem: document.getElementById('bingo-system'),
+      bingoMini: document.getElementById('bingo-mini'),
+      bingoModal: document.getElementById('bingo-modal'),
+      bingoBoard: document.getElementById('bingo-board'),
+      bingoClose: document.getElementById('bingo-close'),
+      bingoProgress: document.getElementById('bingo-progress'),
+      handCounter: document.getElementById('hand-counter'),
+      minBetDisplay: document.getElementById('min-bet-display'),
+      jokerPending: document.getElementById('joker-pending'),
+      captureFlash: document.getElementById('capture-flash'),
+      gameOverModal: document.getElementById('game-over-modal'),
+      gameOverTitle: document.getElementById('game-over-title'),
+      gameOverStats: document.getElementById('game-over-stats'),
+      gameOverBoard: document.getElementById('game-over-board'),
+      btnPlayAgain: document.getElementById('btn-play-again'),
+      // Inline result message (simple outcomes)
+      resultMessage: document.getElementById('result-message'),
+      resultPrimary: document.getElementById('result-primary'),
+      resultSecondary: document.getElementById('result-secondary'),
+      // Capture/Joker Modal
+      resultModal: document.getElementById('result-modal'),
+      resultCaptureHeadline: document.getElementById('result-capture-headline'),
+      resultCaptureGrid: document.getElementById('result-capture-grid'),
+      resultCaptureSubtext: document.getElementById('result-capture-subtext'),
+      resultJokerGrid: document.getElementById('result-joker-grid'),
+      resultContinue: document.getElementById('result-continue'),
+    };
+
+    // ===========================================
+    // INITIALIZATION
+    // ===========================================
+
+    function init() {
+      startNewRun();
+      setupEventListeners();
+    }
+
+    function startNewRun() {
+      // Reset state
+      gameState.bankroll = 500;
+      gameState.handNumber = 0;
+      gameState.jokersCaptured = { color: false, black: false };
+      gameState.pendingJokers = [];
+      gameState.jokerCells = {};
+      gameState.phase = 'betting';
+
+      // Generate bingo board
+      generateBingoBoard();
+
+      // Update displays
+      updateBankrollDisplay();
+      updateMinBet();
+      updateBingoDisplays();
+
+      // Hide modals and inline result
+      elements.gameOverModal.classList.remove('show');
+      elements.bingoModal.classList.remove('show');
+      elements.resultModal.classList.remove('show');
+      elements.resultMessage.classList.remove('show');
+
+      // Clear hands
+      elements.dealerHand.innerHTML = '';
+      elements.playerHand.innerHTML = '';
+      elements.dealerValue.textContent = '';
+      elements.playerValue.textContent = '';
+
+      showDealButton();
+    }
+
+    function generateBingoBoard() {
+      // Shuffle all birds and pick 9 for the board
+      const shuffled = [...ALL_BIRDS].sort(() => Math.random() - 0.5);
+      gameState.bingoBoard = shuffled.slice(0, 9);
+      gameState.bingoCaptured = Array(9).fill(false);
+      gameState.junkBirds = shuffled.slice(9).map(b => b.id);
+    }
+
+    // ===========================================
+    // DECK MANAGEMENT
+    // ===========================================
+
+    function createDeck() {
+      const deck = [];
+      for (const suit of SUITS) {
+        for (const rank of RANKS) {
+          deck.push({ suit, rank, isJoker: false });
+        }
+      }
+      // Add jokers (only uncaptured ones, each is distinct)
+      if (!gameState.jokersCaptured.color) {
+        deck.push({ suit: null, rank: 'JOKER', isJoker: true, jokerType: 'color' });
+      }
+      if (!gameState.jokersCaptured.black) {
+        deck.push({ suit: null, rank: 'JOKER', isJoker: true, jokerType: 'black' });
+      }
+      return deck;
+    }
+
+    function shuffleDeck(deck) {
+      const shuffled = [...deck];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Deal a card - returns the card (may be joker, caller handles animation)
+    function drawCard() {
+      return gameState.deck.pop();
+    }
+
+    // Animate joker appearing in hand, then sliding to pending area
+    async function handleJokerDealt(container, jokerType) {
+      // Create joker card element with correct image
+      const jokerCard = document.createElement('div');
+      jokerCard.className = 'card joker-card';
+      jokerCard.innerHTML = `
+        <div class="card-inner">
+          <div class="card-face">
+            <img src="assets/cards/joker_${jokerType}.png" alt="Joker">
+          </div>
+          <div class="card-back">
+            <img src="assets/cards/back.png" alt="Card back">
+          </div>
+        </div>
+      `;
+
+      // Animate joker into hand
+      jokerCard.classList.add('hitting');
+      container.appendChild(jokerCard);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      jokerCard.classList.remove('hitting');
+
+      // Pause so player can see it
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      // Animate joker sliding to pending area
+      jokerCard.classList.add('joker-slide-away');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Remove joker from hand
+      jokerCard.remove();
+
+      // Track this joker as pending
+      gameState.pendingJokers.push(jokerType);
+      updateJokerPendingDisplay();
+
+      // Small pause before replacement
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
+    // Deal a card to dealer (skip jokers)
+    function dealCardToDealer() {
+      let card = gameState.deck.pop();
+      while (card.isJoker) {
+        // Put joker back somewhere in deck (simplified: just get another)
+        card = gameState.deck.pop();
+      }
+      return card;
+    }
+
+    // ===========================================
+    // CARD VALUE CALCULATIONS
+    // ===========================================
+
+    function getCardValue(card) {
+      if (card.isJoker) return 0;
+      if (BIRD_RANKS.includes(card.rank)) return 10;
+      if (card.rank === 'A') return 11;
+      return parseInt(card.rank, 10);
+    }
+
+    function calculateHandValue(hand) {
+      let value = 0;
+      let aces = 0;
+
+      for (const card of hand) {
+        if (card.isJoker) continue;
+        value += getCardValue(card);
+        if (card.rank === 'A') aces++;
+      }
+
+      while (value > 21 && aces > 0) {
+        value -= 10;
+        aces--;
+      }
+
+      return value;
+    }
+
+    // Returns { low, high } for soft hands, or { value } for hard hands
+    function getHandValueDisplay(hand) {
+      let value = 0;
+      let aces = 0;
+
+      for (const card of hand) {
+        if (card.isJoker) continue;
+        value += getCardValue(card);
+        if (card.rank === 'A') aces++;
+      }
+
+      // Count how many aces we need to convert to 1 to not bust
+      let acesUsedAsEleven = aces;
+      while (value > 21 && acesUsedAsEleven > 0) {
+        value -= 10;
+        acesUsedAsEleven--;
+      }
+
+      // If we still have an ace counted as 11 and we're not at 21, show both values
+      if (acesUsedAsEleven > 0 && value < 21) {
+        const lowValue = value - 10; // Value if we count that ace as 1
+        return `${lowValue}/${value}`;
+      }
+
+      return `${value}`;
+    }
+
+    function isBlackjack(hand) {
+      const nonJoker = hand.filter(c => !c.isJoker);
+      return nonJoker.length === 2 && calculateHandValue(hand) === 21;
+    }
+
+    function isBusted(hand) {
+      return calculateHandValue(hand) > 21;
+    }
+
+    // ===========================================
+    // BIRD / BINGO LOGIC
+    // ===========================================
+
+    function isBirdCard(card) {
+      return BIRD_RANKS.includes(card.rank) && !card.isJoker;
+    }
+
+    function getBirdId(card) {
+      if (!isBirdCard(card)) return null;
+      return `${card.rank}_${card.suit}`;
+    }
+
+    function isBoardBird(card) {
+      const id = getBirdId(card);
+      if (!id) return false;
+      return gameState.bingoBoard.some(b => b.id === id);
+    }
+
+    function isJunkBird(card) {
+      const id = getBirdId(card);
+      if (!id) return false;
+      return gameState.junkBirds.includes(id);
+    }
+
+    function getBoardBirdsInHand() {
+      return gameState.playerHand.filter(card => {
+        if (!isBoardBird(card)) return false;
+        const idx = gameState.bingoBoard.findIndex(b => b.id === getBirdId(card));
+        return idx !== -1 && !gameState.bingoCaptured[idx];
+      });
+    }
+
+    function captureBird(birdId) {
+      const idx = gameState.bingoBoard.findIndex(b => b.id === birdId);
+      if (idx !== -1 && !gameState.bingoCaptured[idx]) {
+        gameState.bingoCaptured[idx] = true;
+        return true;
+      }
+      return false;
+    }
+
+    function getEmptyCells() {
+      return gameState.bingoCaptured
+        .map((captured, idx) => captured ? -1 : idx)
+        .filter(idx => idx !== -1);
+    }
+
+    function captureCell(idx, jokerType = null) {
+      if (idx < 0 || idx > 8 || gameState.bingoCaptured[idx]) return false;
+      gameState.bingoCaptured[idx] = true;
+      if (jokerType) {
+        gameState.jokerCells[idx] = jokerType;
+      }
+      return true;
+    }
+
+    function checkBingoWin() {
+      for (const line of BINGO_LINES) {
+        if (line.every(idx => gameState.bingoCaptured[idx])) {
+          return line;
+        }
+      }
+      return null;
+    }
+
+    function getLineProgress() {
+      return BINGO_LINES.map(line => ({
+        line,
+        captured: line.filter(idx => gameState.bingoCaptured[idx]).length
+      }));
+    }
+
+    function getBestLineProgress() {
+      const progress = getLineProgress();
+      return Math.max(...progress.map(p => p.captured));
+    }
+
+    function getLinesWithTwo() {
+      return getLineProgress().filter(p => p.captured === 2).length;
+    }
+
+    // ===========================================
+    // BET ESCALATION
+    // ===========================================
+
+    function getMinBet() {
+      const intervalIndex = Math.floor(gameState.handNumber / BET_INTERVAL);
+      const idx = Math.min(intervalIndex, BET_SCHEDULE.length - 1);
+      return BET_SCHEDULE[idx];
+    }
+
+    function updateMinBet() {
+      const minBet = getMinBet();
+      gameState.currentBet = minBet;
+      elements.handCounter.textContent = `Hand ${gameState.handNumber + 1}`;
+      elements.minBetDisplay.textContent = `Min Bet: $${minBet}`;
+      elements.btnDeal.textContent = `Deal · $${minBet}`;
+    }
+
+    // ===========================================
+    // UI UPDATES
+    // ===========================================
+
+    function updateBankrollDisplay() {
+      elements.bankroll.textContent = `$${gameState.bankroll}`;
+    }
+
+    function updateBingoDisplays() {
+      // Mini board
+      elements.bingoMini.innerHTML = '';
+      const boardBirdsInHand = getBoardBirdsInHand().map(c => getBirdId(c));
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'bingo-mini-cell';
+
+        const bird = gameState.bingoBoard[i];
+
+        if (gameState.bingoCaptured[i]) {
+          cell.classList.add('captured');
+          // Show star for joker captures, rank+suit for bird captures
+          if (gameState.jokerCells[i]) {
+            cell.textContent = '★';
+          } else {
+            cell.innerHTML = `${bird.rank}<span class="suit">${SUIT_SYMBOLS[bird.suit]}</span>`;
+          }
+        } else {
+          // Show rank + suit symbol (e.g., "K♠")
+          cell.innerHTML = `${bird.rank}<span class="suit">${SUIT_SYMBOLS[bird.suit]}</span>`;
+          if (boardBirdsInHand.includes(bird.id)) {
+            cell.classList.add('in-hand');
+          }
+        }
+
+        elements.bingoMini.appendChild(cell);
+      }
+
+      // Full board
+      elements.bingoBoard.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'bingo-cell';
+
+        const bird = gameState.bingoBoard[i];
+        const img = document.createElement('img');
+
+        // Show joker image for joker captures, bird image otherwise
+        if (gameState.jokerCells[i]) {
+          img.src = `assets/cards/joker_${gameState.jokerCells[i]}.png`;
+          img.alt = 'Joker';
+        } else {
+          img.src = `assets/cards/${bird.suit}_${bird.rank}.png`;
+          img.alt = `${bird.rank} of ${bird.suit}`;
+        }
+        cell.appendChild(img);
+
+        if (gameState.bingoCaptured[i]) {
+          cell.classList.add('captured');
+        }
+
+        elements.bingoBoard.appendChild(cell);
+      }
+
+      // Progress text
+      const captured = gameState.bingoCaptured.filter(Boolean).length;
+      const bestLine = getBestLineProgress();
+      elements.bingoProgress.textContent = `${captured}/9 captured · Best line: ${bestLine}/3`;
+    }
+
+    function updateJokerPendingDisplay() {
+      // Use inline style instead of CSS class for Safari compatibility
+      if (gameState.pendingJokers.length > 0) {
+        elements.jokerPending.style.display = 'flex';
+        elements.bingoSystem.classList.add('joker-pending');
+        // Update the joker image to show the first pending joker
+        const jokerImg = elements.jokerPending.querySelector('img');
+        if (jokerImg) {
+          jokerImg.src = `assets/cards/joker_${gameState.pendingJokers[0]}.png`;
+        }
+      } else {
+        elements.jokerPending.style.display = 'none';
+        elements.bingoSystem.classList.remove('joker-pending');
+      }
+    }
+
+    function updateHandValues() {
+      elements.playerValue.textContent = getHandValueDisplay(gameState.playerHand);
+
+      if (gameState.phase === 'playerTurn') {
+        // Show dealer's visible card - use display format for aces
+        const visibleCard = gameState.dealerHand[0];
+        if (visibleCard.rank === 'A') {
+          elements.dealerValue.textContent = '1/11';
+        } else {
+          elements.dealerValue.textContent = getCardValue(visibleCard);
+        }
+      } else if (gameState.phase === 'resolution' || gameState.phase === 'dealerTurn') {
+        elements.dealerValue.textContent = getHandValueDisplay(gameState.dealerHand);
+      } else {
+        elements.dealerValue.textContent = '';
+      }
+    }
+
+    // ===========================================
+    // INLINE RESULT MESSAGE (simple outcomes)
+    // ===========================================
+
+    function showInlineResult(primary, secondary, type) {
+      elements.resultPrimary.textContent = primary;
+      elements.resultSecondary.textContent = secondary || '';
+      elements.resultSecondary.className = 'result-secondary' + (type === 'danger' ? ' danger' : '');
+
+      elements.resultMessage.className = 'result-message show';
+      if (type === 'win') {
+        elements.resultMessage.classList.add('win');
+      } else if (type === 'lose' || type === 'danger') {
+        elements.resultMessage.classList.add('lose');
+      }
+    }
+
+    function hideInlineResult() {
+      elements.resultMessage.className = 'result-message';
+    }
+
+    // ===========================================
+    // CAPTURE/JOKER MODAL (special moments)
+    // ===========================================
+
+    // Build the 3x3 grid for result modal
+    function buildResultGrid(container, justCapturedIndices = []) {
+      container.innerHTML = '';
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'result-grid-cell';
+        cell.dataset.index = i;
+
+        const bird = gameState.bingoBoard[i];
+        const img = document.createElement('img');
+
+        // Show joker image for joker captures
+        if (gameState.jokerCells[i]) {
+          img.src = `assets/cards/joker_${gameState.jokerCells[i]}.png`;
+          img.alt = 'Joker';
+        } else {
+          img.src = `assets/cards/${bird.suit}_${bird.rank}.png`;
+          img.alt = `${bird.rank} of ${bird.suit}`;
+        }
+        cell.appendChild(img);
+
+        if (gameState.bingoCaptured[i]) {
+          cell.classList.add('captured');
+          if (justCapturedIndices.includes(i)) {
+            cell.classList.add('just-captured');
+          }
+        }
+
+        container.appendChild(cell);
+      }
+    }
+
+    // Show capture/joker modal
+    // Returns a Promise that resolves when player clicks "Deal" or selects a joker cell
+    // For capture: resolve triggers deal()
+    // For joker: resolve after cell selection, then show Deal button
+    function showCaptureModal(data) {
+      return new Promise((resolve) => {
+        const modal = elements.resultModal;
+
+        // Reset classes
+        modal.className = 'result-modal capture';
+
+        // Set up content
+        elements.resultCaptureHeadline.textContent = data.headline;
+        elements.resultCaptureSubtext.textContent = data.subtext || '';
+        elements.resultCaptureSubtext.className = 'result-subtext' + (data.danger ? ' danger' : '');
+        buildResultGrid(elements.resultCaptureGrid, data.justCapturedIndices || []);
+
+        // Update button text with next bet amount
+        const nextBet = getMinBet();
+        elements.resultContinue.textContent = `Deal · $${nextBet}`;
+        elements.resultContinue.style.display = 'block';
+
+        // Trigger capture flash
+        elements.captureFlash.classList.add('show');
+        setTimeout(() => elements.captureFlash.classList.remove('show'), 400);
+
+        // Show modal
+        modal.classList.add('show');
+
+        // Set up Deal button to actually deal
+        const dealHandler = () => {
+          elements.resultContinue.removeEventListener('click', dealHandler);
+          modal.classList.remove('show');
+          resolve({ shouldDeal: true });
+        };
+        elements.resultContinue.addEventListener('click', dealHandler);
+      });
+    }
+
+    function showJokerModal() {
+      return new Promise((resolve) => {
+        const modal = elements.resultModal;
+
+        // Get the joker type being placed
+        const jokerType = gameState.pendingJokers[0];
+
+        // Reset classes
+        modal.className = 'result-modal joker';
+
+        // Update the hero card image to show the correct joker
+        const heroImg = modal.querySelector('.joker-hero img');
+        if (heroImg) {
+          heroImg.src = `assets/cards/joker_${jokerType}.png`;
+        }
+
+        // Build grid with clickable empty cells
+        buildResultGrid(elements.resultJokerGrid);
+
+        // Hide deal button during selection
+        elements.resultContinue.style.display = 'none';
+
+        // Make empty cells clickable
+        const cells = elements.resultJokerGrid.querySelectorAll('.result-grid-cell');
+        const emptyCells = getEmptyCells();
+
+        emptyCells.forEach(idx => {
+          const cell = cells[idx];
+          const handler = async () => {
+            // Remove click handlers from all cells
+            cells.forEach(c => c.replaceWith(c.cloneNode(true)));
+
+            // Capture this cell as joker and mark this joker type as captured
+            captureCell(idx, jokerType);
+            gameState.jokersCaptured[jokerType] = true;
+            gameState.pendingJokers.shift();  // Remove the first pending joker
+
+            // Update the cell to show joker landing with correct image
+            const newCells = elements.resultJokerGrid.querySelectorAll('.result-grid-cell');
+            const targetCell = newCells[idx];
+            targetCell.classList.add('captured', 'joker-landing');
+            const img = targetCell.querySelector('img');
+            img.src = `assets/cards/joker_${jokerType}.png`;
+            img.alt = 'Joker';
+
+            // Wait for animation
+            await new Promise(r => setTimeout(r, 800));
+
+            // Update displays
+            updateBingoDisplays();
+            updateJokerPendingDisplay();
+
+            // Check for bingo win
+            const winningLine = checkBingoWin();
+            if (winningLine) {
+              modal.classList.remove('show');
+              setTimeout(() => showGameOverWin(winningLine), 300);
+              resolve({ jokerCell: idx, jokerType, bingoWin: true });
+              return;
+            }
+
+            // Show Deal button
+            const nextBet = getMinBet();
+            elements.resultContinue.textContent = `Deal · $${nextBet}`;
+            elements.resultContinue.style.display = 'block';
+
+            const dealHandler = () => {
+              elements.resultContinue.removeEventListener('click', dealHandler);
+              modal.classList.remove('show');
+              resolve({ jokerCell: idx, jokerType, bingoWin: false, shouldDeal: true });
+            };
+            elements.resultContinue.addEventListener('click', dealHandler);
+          };
+
+          cell.addEventListener('click', handler);
+        });
+
+        // Show modal
+        modal.classList.add('show');
+      });
+    }
+
+    function hideResultModal() {
+      elements.resultModal.classList.remove('show');
+    }
+
+    // ===========================================
+    // BUTTON STATES
+    // ===========================================
+
+    function showDealButton() {
+      elements.btnDeal.classList.add('active');
+      elements.actionButtons.classList.remove('active');
+      elements.btnRestart.classList.remove('active');
+    }
+
+    function showActionButtons(canDouble) {
+      elements.btnDeal.classList.remove('active');
+      elements.actionButtons.classList.add('active');
+      elements.btnRestart.classList.remove('active');
+      elements.btnHit.disabled = false;
+      elements.btnStand.disabled = false;
+      elements.btnDouble.disabled = !canDouble;
+    }
+
+    function hideAllButtons() {
+      elements.btnDeal.classList.remove('active');
+      elements.actionButtons.classList.remove('active');
+      elements.btnRestart.classList.remove('active');
+    }
+
+    function showRestartButton() {
+      elements.btnDeal.classList.remove('active');
+      elements.actionButtons.classList.remove('active');
+      elements.btnRestart.classList.add('active');
+    }
+
+    // ===========================================
+    // CARD DOM CREATION
+    // ===========================================
+
+    function createCardElement(card, faceDown = false) {
+      const cardDiv = document.createElement('div');
+      cardDiv.className = 'card';
+      if (faceDown) cardDiv.classList.add('flipped');
+
+      // Add board-bird class for glow effect
+      // But NOT if this card busted the hand - it wasn't really an "opportunity"
+      if (isBoardBird(card)) {
+        const idx = gameState.bingoBoard.findIndex(b => b.id === getBirdId(card));
+        if (idx !== -1 && !gameState.bingoCaptured[idx] && !isBusted(gameState.playerHand)) {
+          cardDiv.classList.add('board-bird');
+        }
+      }
+
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+
+      const face = document.createElement('div');
+      face.className = 'card-face';
+      const faceImg = document.createElement('img');
+      // Handle joker cards
+      if (card.isJoker) {
+        faceImg.src = 'assets/cards/joker_color.png';
+        faceImg.alt = 'Joker';
+      } else {
+        faceImg.src = `assets/cards/${card.suit}_${card.rank}.png`;
+        faceImg.alt = `${card.rank} of ${card.suit}`;
+      }
+      face.appendChild(faceImg);
+
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      const backImg = document.createElement('img');
+      backImg.src = 'assets/cards/back.png';
+      backImg.alt = 'Card back';
+      back.appendChild(backImg);
+
+      inner.appendChild(face);
+      inner.appendChild(back);
+      cardDiv.appendChild(inner);
+
+      return cardDiv;
+    }
+
+    function dealCard(container, card, faceDown = false, delay = 0) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const cardEl = createCardElement(card, faceDown);
+          cardEl.classList.add('dealing');
+          container.appendChild(cardEl);
+
+          cardEl.addEventListener('animationend', () => {
+            cardEl.classList.remove('dealing');
+            resolve(cardEl);
+          }, { once: true });
+        }, delay);
+      });
+    }
+
+    function hitCard(container, card, delay = 0) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const cardEl = createCardElement(card, false);
+          cardEl.classList.add('hitting');
+          container.appendChild(cardEl);
+
+          cardEl.addEventListener('animationend', () => {
+            cardEl.classList.remove('hitting');
+            resolve(cardEl);
+          }, { once: true });
+        }, delay);
+      });
+    }
+
+    // ===========================================
+    // GAME ACTIONS
+    // ===========================================
+
+    async function deal() {
+      const minBet = getMinBet();
+      if (gameState.bankroll < minBet) return;
+
+      // IMMEDIATELY close any open modals
+      elements.bingoModal.classList.remove('show');
+      elements.gameOverModal.classList.remove('show');
+
+      // Increment hand counter
+      gameState.handNumber++;
+      updateMinBet();
+
+      // Reset hand state
+      gameState.deck = shuffleDeck(createDeck());
+      gameState.playerHand = [];
+      gameState.dealerHand = [];
+      gameState.result = null;
+      gameState.pendingJokers = [];
+      gameState.phase = 'dealing';
+
+      // Clear UI
+      elements.dealerHand.innerHTML = '';
+      elements.playerHand.innerHTML = '';
+      elements.dealerValue.textContent = '';
+      elements.playerValue.textContent = '';
+      hideInlineResult();
+      hideResultModal();
+      updateJokerPendingDisplay();
+      elements.dealerHand.classList.remove('winner', 'loser');
+      elements.playerHand.classList.remove('winner', 'loser');
+
+      // Deduct bet
+      gameState.bankroll -= minBet;
+      gameState.currentBet = minBet;
+      updateBankrollDisplay();
+
+      // Hide buttons during dealing
+      hideAllButtons();
+
+      // Deal cards - with joker handling for player
+      // Player card 1
+      let card1 = drawCard();
+      while (card1.isJoker) {
+        await handleJokerDealt(elements.playerHand, card1.jokerType);
+        card1 = drawCard();
+      }
+      gameState.playerHand.push(card1);
+      await dealCard(elements.playerHand, card1, false, 0);
+
+      // Dealer card 1
+      const card2 = dealCardToDealer();
+      gameState.dealerHand.push(card2);
+      await dealCard(elements.dealerHand, card2, false, 150);
+
+      // Player card 2
+      let card3 = drawCard();
+      while (card3.isJoker) {
+        await handleJokerDealt(elements.playerHand, card3.jokerType);
+        card3 = drawCard();
+      }
+      gameState.playerHand.push(card3);
+      await dealCard(elements.playerHand, card3, false, 150);
+
+      // Dealer card 2 (face down)
+      const card4 = dealCardToDealer();
+      gameState.dealerHand.push(card4);
+      await dealCard(elements.dealerHand, card4, true, 150);
+
+      updateHandValues();
+      updateBingoDisplays();
+
+      // Check for blackjack
+      if (isBlackjack(gameState.playerHand)) {
+        await revealDealerHoleCard();
+        if (isBlackjack(gameState.dealerHand)) {
+          endHand('push');
+        } else {
+          endHand('blackjack');
+        }
+        return;
+      }
+
+      // Player's turn
+      gameState.phase = 'playerTurn';
+      const canDouble = gameState.bankroll >= minBet;
+      showActionButtons(canDouble);
+    }
+
+    async function hit() {
+      if (gameState.phase !== 'playerTurn') return;
+
+      elements.btnHit.disabled = true;
+      elements.btnStand.disabled = true;
+      elements.btnDouble.disabled = true;
+
+      // Draw card - might be joker
+      let card = drawCard();
+
+      // Handle joker(s) with visible animation
+      while (card.isJoker) {
+        await handleJokerDealt(elements.playerHand, card.jokerType);
+        card = drawCard();
+      }
+
+      // Now show the actual card
+      gameState.playerHand.push(card);
+      await hitCard(elements.playerHand, card);
+      updateHandValues();
+      updateBingoDisplays();
+
+      if (isBusted(gameState.playerHand)) {
+        await revealDealerHoleCard();
+        endHand('bust');
+        return;
+      }
+
+      showActionButtons(false);
+    }
+
+    async function stand() {
+      if (gameState.phase !== 'playerTurn') return;
+
+      hideAllButtons();
+      gameState.phase = 'dealerTurn';
+
+      await revealDealerHoleCard();
+      await dealerPlay();
+      determineWinner();
+    }
+
+    async function doubleDown() {
+      if (gameState.phase !== 'playerTurn') return;
+      if (gameState.bankroll < gameState.currentBet) return;
+
+      hideAllButtons();
+
+      gameState.bankroll -= gameState.currentBet;
+      gameState.currentBet *= 2;
+      updateBankrollDisplay();
+
+      // Draw card - handle jokers with animation
+      let card = drawCard();
+      while (card.isJoker) {
+        await handleJokerDealt(elements.playerHand, card.jokerType);
+        card = drawCard();
+      }
+
+      gameState.playerHand.push(card);
+      await hitCard(elements.playerHand, card);
+      updateHandValues();
+      updateBingoDisplays();
+
+      if (isBusted(gameState.playerHand)) {
+        await revealDealerHoleCard();
+        endHand('bust');
+        return;
+      }
+
+      gameState.phase = 'dealerTurn';
+      await revealDealerHoleCard();
+      await dealerPlay();
+      determineWinner();
+    }
+
+    async function revealDealerHoleCard() {
+      const holeCard = elements.dealerHand.querySelector('.card.flipped');
+      if (holeCard) {
+        holeCard.classList.remove('flipped');
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      updateHandValues();
+    }
+
+    async function dealerPlay() {
+      while (calculateHandValue(gameState.dealerHand) < 17) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        const card = dealCardToDealer();
+        gameState.dealerHand.push(card);
+        await hitCard(elements.dealerHand, card);
+        updateHandValues();
+      }
+    }
+
+    function determineWinner() {
+      const playerValue = calculateHandValue(gameState.playerHand);
+      const dealerValue = calculateHandValue(gameState.dealerHand);
+
+      if (isBusted(gameState.dealerHand)) {
+        endHand('win');
+      } else if (playerValue > dealerValue) {
+        endHand('win');
+      } else if (playerValue < dealerValue) {
+        endHand('lose');
+      } else {
+        endHand('push');
+      }
+    }
+
+    async function endHand(result) {
+      gameState.phase = 'resolution';
+      gameState.result = result;
+
+      const playerWon = result === 'win' || result === 'blackjack';
+      const playerPushed = result === 'push';
+      const playerBusted = result === 'bust';
+      const playerLost = result === 'lose' || result === 'bust';
+      const dealerBusted = isBusted(gameState.dealerHand);
+
+      // Calculate winnings
+      let winnings = 0;
+
+      switch (result) {
+        case 'blackjack':
+          winnings = gameState.currentBet + Math.floor(gameState.currentBet * 2.5);
+          elements.playerHand.classList.add('winner');
+          break;
+        case 'win':
+          winnings = gameState.currentBet * 2;
+          elements.playerHand.classList.add('winner');
+          elements.dealerHand.classList.add('loser');
+          break;
+        case 'bust':
+          winnings = 0;
+          elements.playerHand.classList.add('loser');
+          break;
+        case 'lose':
+          winnings = 0;
+          elements.playerHand.classList.add('loser');
+          elements.dealerHand.classList.add('winner');
+          break;
+        case 'push':
+          winnings = gameState.currentBet;
+          break;
+      }
+
+      gameState.bankroll += winnings;
+      updateBankrollDisplay();
+
+      // BIRD CAPTURE LOGIC
+      const boardBirdsInHand = getBoardBirdsInHand();
+      const capturedIndices = [];
+
+      if (!playerBusted) {
+        // Capture board birds in hand (win or push)
+        for (const card of boardBirdsInHand) {
+          const birdId = getBirdId(card);
+          const idx = gameState.bingoBoard.findIndex(b => b.id === birdId);
+          if (idx !== -1 && !gameState.bingoCaptured[idx]) {
+            gameState.bingoCaptured[idx] = true;
+            capturedIndices.push(idx);
+          }
+        }
+      }
+
+      const birdsCapt = capturedIndices.length;
+
+      // Check for joker selection eligibility
+      const hasUncapturedJoker = !gameState.jokersCaptured.color || !gameState.jokersCaptured.black;
+      const needsJokerSelection = playerWon && gameState.pendingJokers.length > 0 && hasUncapturedJoker;
+
+      if (!needsJokerSelection) {
+        // Reset pending jokers if not converting (lost the hand)
+        gameState.pendingJokers = [];
+      }
+      updateJokerPendingDisplay();
+      updateBingoDisplays();
+
+      // Calculate bankroll danger
+      const nextMinBet = getMinBet();
+      const canAffordNext = gameState.bankroll >= nextMinBet;
+      const isLowBankroll = gameState.bankroll < nextMinBet * 3;
+      const isDanger = isLowBankroll && canAffordNext;
+
+      // Check for bingo win before showing any result
+      const winningLine = checkBingoWin();
+      if (winningLine) {
+        await new Promise(r => setTimeout(r, 800));
+        showGameOverWin(winningLine);
+        return;
+      }
+
+      // Build hand outcome description for context
+      let handOutcome = '';
+      if (result === 'blackjack') {
+        handOutcome = 'Blackjack!';
+      } else if (dealerBusted) {
+        handOutcome = 'Dealer busted';
+      } else if (playerWon) {
+        handOutcome = 'You win';
+      } else if (playerPushed) {
+        handOutcome = 'Push';
+      } else if (playerBusted) {
+        handOutcome = 'Bust';
+      } else {
+        handOutcome = 'Dealer wins';
+      }
+
+      // TIER 1: Joker selection (blocking modal)
+      if (needsJokerSelection) {
+        // Show hand result first so player can see what happened
+        const winText = result === 'blackjack' ? 'Blackjack!' : (dealerBusted ? 'Dealer Busted!' : 'You Win!');
+        const winAmount = `+$${winnings - gameState.currentBet}`;
+        showInlineResult(winText, winAmount, 'win');
+
+        // Let the hand result breathe before showing joker modal
+        await new Promise(r => setTimeout(r, 1500));
+        hideInlineResult();
+
+        const modalResult = await showJokerModal();
+
+        if (modalResult.bingoWin) {
+          return;
+        }
+
+        // Joker was placed, ensure pending is cleared
+        gameState.pendingJokers = [];
+        updateJokerPendingDisplay();
+
+        // Clear hand state
+        gameState.playerHand = [];
+        gameState.dealerHand = [];
+        updateBingoDisplays();
+
+        // Modal's Deal button triggers deal
+        if (modalResult.shouldDeal) {
+          if (gameState.bankroll < nextMinBet) {
+            showGameOverLose();
+          } else {
+            deal();
+          }
+        }
+        return;
+      }
+
+      // TIER 2: Capture celebration (blocking modal)
+      if (birdsCapt > 0) {
+        // Show hand result first so player can see what happened
+        let inlinePrimary = '';
+        let inlineType = '';
+        if (result === 'blackjack') {
+          inlinePrimary = 'Blackjack!';
+          inlineType = 'win';
+        } else if (playerWon) {
+          inlinePrimary = dealerBusted ? 'Dealer Busted!' : 'You Win!';
+          inlineType = 'win';
+        } else if (playerPushed) {
+          inlinePrimary = 'Push';
+          inlineType = '';
+        }
+        const inlineSecondary = playerWon ? `+$${winnings - gameState.currentBet}` : 'Bet returned';
+        showInlineResult(inlinePrimary, inlineSecondary, inlineType);
+
+        // Let the hand result breathe before showing capture modal
+        await new Promise(r => setTimeout(r, 1500));
+        hideInlineResult();
+
+        const headline = birdsCapt === 1 ? 'Bird Captured!' : `${birdsCapt} Birds Captured!`;
+
+        // Build subtext with hand context
+        let subtext = handOutcome;
+        if (winnings > gameState.currentBet) {
+          subtext += ` · +$${winnings - gameState.currentBet}`;
+        } else if (playerPushed) {
+          subtext += ' · Bet returned';
+        }
+        if (isDanger) {
+          subtext += ` · $${gameState.bankroll} left`;
+        }
+
+        const modalResult = await showCaptureModal({
+          headline,
+          subtext,
+          justCapturedIndices: capturedIndices,
+          danger: isDanger,
+        });
+
+        // Clear hand state
+        gameState.playerHand = [];
+        gameState.dealerHand = [];
+        updateBingoDisplays();
+
+        // Modal's Deal button triggers deal
+        if (modalResult.shouldDeal) {
+          if (gameState.bankroll < nextMinBet) {
+            showGameOverLose();
+          } else {
+            deal();
+          }
+        }
+        return;
+      }
+
+      // TIER 3: Simple result (non-blocking inline message)
+      let primaryMsg = '';
+      let secondaryMsg = '';
+      let resultType = '';
+
+      // Note: We don't call out "bird lost" - if you busted, you busted.
+      // The bird wasn't really "yours" if it was the card that busted you.
+      {
+        // Standard outcomes
+        switch (result) {
+          case 'blackjack':
+            primaryMsg = 'Blackjack!';
+            secondaryMsg = `+$${winnings - gameState.currentBet}`;
+            resultType = 'win';
+            break;
+          case 'win':
+            primaryMsg = dealerBusted ? 'Dealer Busted!' : 'You Win!';
+            secondaryMsg = `+$${winnings - gameState.currentBet}`;
+            resultType = 'win';
+            break;
+          case 'push':
+            primaryMsg = 'Push';
+            secondaryMsg = 'Bet returned';
+            resultType = '';
+            break;
+          case 'bust':
+            primaryMsg = 'Bust';
+            secondaryMsg = `−$${gameState.currentBet}`;
+            resultType = 'lose';
+            break;
+          case 'lose':
+            primaryMsg = 'Dealer Wins';
+            secondaryMsg = `−$${gameState.currentBet}`;
+            resultType = 'lose';
+            break;
+        }
+      }
+
+      if (isDanger) {
+        secondaryMsg += ` · $${gameState.bankroll} left`;
+        resultType = 'danger';
+      }
+
+      showInlineResult(primaryMsg, secondaryMsg, resultType);
+
+      // Clear hand state
+      gameState.playerHand = [];
+      gameState.dealerHand = [];
+      updateBingoDisplays();
+
+      // Check if broke (can't afford next minimum bet)
+      if (gameState.bankroll < nextMinBet) {
+        showGameOverLose();
+      } else {
+        showDealButton();
+      }
+    }
+
+    function showGameOverWin(winningLine) {
+      elements.gameOverTitle.textContent = 'Bird in the Hand!';
+      elements.gameOverTitle.className = 'game-over-title win';
+
+      elements.gameOverStats.innerHTML = `
+        ${gameState.handNumber} hands · $${gameState.bankroll} remaining
+      `;
+
+      // Build board showing winning line
+      elements.gameOverBoard.innerHTML = '';
+      const boardGrid = document.createElement('div');
+      boardGrid.className = 'game-over-grid';
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'game-over-cell';
+
+        const bird = gameState.bingoBoard[i];
+        const img = document.createElement('img');
+
+        if (gameState.jokerCells[i]) {
+          img.src = `assets/cards/joker_${gameState.jokerCells[i]}.png`;
+          img.alt = 'Joker';
+        } else {
+          img.src = `assets/cards/${bird.suit}_${bird.rank}.png`;
+          img.alt = `${bird.rank} of ${bird.suit}`;
+        }
+
+        if (winningLine.includes(i)) {
+          cell.classList.add('winning');
+        } else if (gameState.bingoCaptured[i]) {
+          cell.classList.add('captured');
+        }
+
+        cell.appendChild(img);
+        boardGrid.appendChild(cell);
+      }
+
+      elements.gameOverBoard.appendChild(boardGrid);
+      elements.gameOverModal.classList.add('show');
+    }
+
+    function showGameOverLose() {
+      elements.gameOverTitle.textContent = 'Out of Cash';
+      elements.gameOverTitle.className = 'game-over-title lose';
+
+      const linesWithTwo = getLinesWithTwo();
+      const bestLine = getBestLineProgress();
+      let statsText = `${gameState.handNumber} hands · Best line: ${bestLine}/3`;
+      if (linesWithTwo > 0) {
+        statsText += `<br><span style="opacity: 0.7">${linesWithTwo} line${linesWithTwo > 1 ? 's' : ''} at 2/3 — so close!</span>`;
+      }
+      elements.gameOverStats.innerHTML = statsText;
+
+      // Build board showing progress
+      elements.gameOverBoard.innerHTML = '';
+      const boardGrid = document.createElement('div');
+      boardGrid.className = 'game-over-grid';
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'game-over-cell';
+
+        const bird = gameState.bingoBoard[i];
+        const img = document.createElement('img');
+
+        if (gameState.jokerCells[i]) {
+          img.src = `assets/cards/joker_${gameState.jokerCells[i]}.png`;
+          img.alt = 'Joker';
+        } else {
+          img.src = `assets/cards/${bird.suit}_${bird.rank}.png`;
+          img.alt = `${bird.rank} of ${bird.suit}`;
+        }
+
+        if (gameState.bingoCaptured[i]) {
+          cell.classList.add('captured');
+        }
+
+        cell.appendChild(img);
+        boardGrid.appendChild(cell);
+      }
+
+      elements.gameOverBoard.appendChild(boardGrid);
+      elements.gameOverModal.classList.add('show');
+    }
+
+    // ===========================================
+    // EVENT LISTENERS
+    // ===========================================
+
+    function setupEventListeners() {
+      elements.btnDeal.addEventListener('click', deal);
+      elements.btnHit.addEventListener('click', hit);
+      elements.btnStand.addEventListener('click', stand);
+      elements.btnDouble.addEventListener('click', doubleDown);
+      elements.btnRestart.addEventListener('click', startNewRun);
+      elements.btnPlayAgain.addEventListener('click', startNewRun);
+
+      // Bingo modal toggle
+      elements.bingoMini.addEventListener('click', () => {
+        elements.bingoModal.classList.add('show');
+      });
+
+      elements.bingoClose.addEventListener('click', () => {
+        // Don't close during joker selection - must make a choice
+        if (elements.bingoModal.classList.contains('joker-selection')) {
+          return;
+        }
+        elements.bingoModal.classList.remove('show');
+      });
+
+      elements.bingoModal.addEventListener('click', (e) => {
+        // Don't close during joker selection - must make a choice
+        if (elements.bingoModal.classList.contains('joker-selection')) {
+          return;
+        }
+        if (e.target === elements.bingoModal) {
+          elements.bingoModal.classList.remove('show');
+        }
+      });
+    }
+
+    // Start!
+    init();
+  </script>
 </body>
 </html>
