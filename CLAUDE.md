@@ -16,6 +16,11 @@ sync                      # pull latest before working
 save "what you changed"   # commit and push
 ```
 
+Local testing:
+```bash
+python3 -m http.server 8000    # then visit localhost:8000 or LAN IP:8000 on mobile
+```
+
 ## Tech Stack
 
 - Vanilla HTML/CSS/JS (no build tools)
@@ -76,7 +81,7 @@ A bingo-style collection mechanic layered on top of blackjack:
 
 ### Core Mechanics
 - **Bird Cards:** J, Q, K of each suit (12 total, 9 randomly placed on 3x3 board)
-- **Capture:** Win or push a hand → capture any board birds in your hand
+- **Capture:** Don't bust → capture any board birds in your hand (even if dealer wins!)
 - **Bust:** Lose the birds in your hand (they stay uncaptured)
 - **Win Condition:** Complete a line of 3 (row, column, or diagonal)
 
@@ -100,10 +105,11 @@ A bingo-style collection mechanic layered on top of blackjack:
 - Joker cells tracked in `gameState.jokerCells` as `{ cellIndex: jokerType }` map — shows ★ in mini-grid, correct joker image in full board
 - Two jokers are distinct: track per type with `gameState.jokersCaptured = { color: false, black: false }`
 - Don't glow/highlight birds that cause a bust — they weren't an "opportunity"
+- Don't show mobile grid on bust either — same logic, bird wasn't a real opportunity
 - Show inline result ~1.5s before capture/joker modal so player can grok the hand outcome first
 
 ### UI Components
-- **Mini-grid:** Top-left corner, shows 3x3 board state, click to expand
+- **Mini-grid:** Desktop: top-left corner. Mobile: centered (replaces birb logo) only when bird in hand or joker pending
 - **Result system:** Tiered — joker modal (blocking) → capture modal (blocking) → inline result (non-blocking)
 - **Game over modal:** Win/lose screen with final board state
 - **Hand values:** Soft hands show both values (e.g., "7/17" for A-6)

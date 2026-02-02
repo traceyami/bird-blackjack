@@ -9,10 +9,7 @@
   <style>
     /* Bird in the Hand - Prototype Overrides */
 
-    /* Update title */
-    .felt-title {
-      display: none;
-    }
+    /* Title shown below logo */
 
     /* Bingo System Container - unified mini-grid + joker pending */
     .bingo-system {
@@ -334,11 +331,12 @@
       opacity: 0.8;
     }
 
-    /* Joker card slide away animation - slides toward top-left */
+    /* Joker card slide away animation - slides toward pending box */
     .card.joker-slide-away {
       animation: joker-slide 0.6s ease-in forwards;
     }
 
+    /* Desktop: slides toward top-left */
     @keyframes joker-slide {
       0% {
         transform: translateX(0) translateY(0) scale(1);
@@ -347,6 +345,20 @@
       100% {
         transform: translateX(-400px) translateY(-300px) scale(0.3);
         opacity: 0;
+      }
+    }
+
+    /* Mobile: slides toward center where pending box sits */
+    @media (max-width: 767px) {
+      @keyframes joker-slide {
+        0% {
+          transform: translateX(0) translateY(0) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(-60px) translateY(-120px) scale(0.4);
+          opacity: 0;
+        }
       }
     }
 
@@ -907,11 +919,70 @@
       min-width: 200px;
     }
 
+    /* ===========================================
+       MOBILE: Grid visibility toggle (Option 3)
+       Show birb logo by default, grid when relevant
+       =========================================== */
+    @media (max-width: 767px) {
+      /* Hide grid by default on mobile */
+      .bingo-system {
+        display: none;
+        /* Center it where birb logo sits */
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        z-index: 10;
+      }
+
+      /* Show grid when relevant (bird in hand or joker pending) */
+      body.grid-active .bingo-system {
+        display: flex;
+      }
+
+      /* Hide birb logo and title when grid is active */
+      body.grid-active .felt-branding,
+      body.grid-active .felt-title {
+        display: none !important;
+      }
+
+      /* Joker pending indicator - left of grid, height-matched */
+      body.grid-active #joker-pending {
+        order: -1; /* Move to left of grid */
+        border-radius: 8px;
+        border-top: none;
+        border-right: 1px solid rgba(255, 205, 0, 0.3);
+        border-left: none;
+        flex-direction: row;
+        max-height: 84px; /* Match mini grid height */
+        padding: 6px 8px;
+        gap: 6px;
+      }
+
+      body.grid-active #joker-pending .joker-pending-icon {
+        width: 40px;
+        height: 56px;
+        flex-shrink: 0;
+      }
+
+      body.grid-active #joker-pending .joker-pending-text {
+        font-size: 0.45rem;
+        line-height: 1.4;
+        text-align: left;
+      }
+
+      body.grid-active .bingo-mini {
+        border-radius: 8px;
+      }
+    }
+
     /* Responsive */
     @media (max-width: 400px) {
       .bingo-system {
-        top: 15px;
-        left: 15px;
+        gap: 6px;
       }
 
       .bingo-mini {
@@ -919,6 +990,21 @@
         grid-template-rows: repeat(3, 24px);
         gap: 2px;
         padding: 4px;
+      }
+
+      body.grid-active #joker-pending {
+        max-height: 80px; /* Match smaller grid */
+        padding: 4px 6px;
+        gap: 4px;
+      }
+
+      body.grid-active #joker-pending .joker-pending-icon {
+        width: 36px;
+        height: 50px;
+      }
+
+      body.grid-active #joker-pending .joker-pending-text {
+        font-size: 0.4rem;
       }
 
       .bingo-mini-cell {
@@ -1008,6 +1094,7 @@
 <body class="with-rail">
   <div class="felt-table">
     <img src="assets/logo.svg" alt="birb" class="felt-branding">
+    <div class="felt-title">In the Hand</div>
 
     <!-- Bingo System: Mini Board + Joker Pending as one unit -->
     <div class="bingo-system" id="bingo-system">
@@ -1597,6 +1684,9 @@
       const captured = gameState.bingoCaptured.filter(Boolean).length;
       const bestLine = getBestLineProgress();
       elements.bingoProgress.textContent = `${captured}/9 captured · Best line: ${bestLine}/3`;
+
+      // Update mobile grid visibility
+      updateGridVisibility();
     }
 
     function updateJokerPendingDisplay() {
@@ -1612,6 +1702,23 @@
       } else {
         elements.jokerPending.style.display = 'none';
         elements.bingoSystem.classList.remove('joker-pending');
+      }
+      updateGridVisibility();
+    }
+
+    // Mobile: Show grid only when relevant (bird in hand or joker pending)
+    function updateGridVisibility() {
+      const hasBirdInHand = getBoardBirdsInHand().length > 0;
+      const hasJokerPending = gameState.pendingJokers.length > 0;
+      const playerBusted = isBusted(gameState.playerHand);
+
+      // Don't show grid for birds if busted - they weren't a real opportunity
+      const shouldShowGrid = (hasBirdInHand && !playerBusted) || hasJokerPending;
+
+      if (shouldShowGrid) {
+        document.body.classList.add('grid-active');
+      } else {
+        document.body.classList.remove('grid-active');
       }
     }
 
@@ -2172,7 +2279,7 @@
       const capturedIndices = [];
 
       if (!playerBusted) {
-        // Capture board birds in hand (win or push)
+        // Capture board birds in hand (as long as you didn't bust)
         for (const card of boardBirdsInHand) {
           const birdId = getBirdId(card);
           const idx = gameState.bingoBoard.findIndex(b => b.id === birdId);
@@ -2267,18 +2374,26 @@
       if (birdsCapt > 0) {
         // Show hand result first so player can see what happened
         let inlinePrimary = '';
+        let inlineSecondary = '';
         let inlineType = '';
         if (result === 'blackjack') {
           inlinePrimary = 'Blackjack!';
+          inlineSecondary = `+$${winnings - gameState.currentBet}`;
           inlineType = 'win';
         } else if (playerWon) {
           inlinePrimary = dealerBusted ? 'Dealer Busted!' : 'You Win!';
+          inlineSecondary = `+$${winnings - gameState.currentBet}`;
           inlineType = 'win';
         } else if (playerPushed) {
           inlinePrimary = 'Push';
+          inlineSecondary = 'Bet returned';
           inlineType = '';
+        } else {
+          // Dealer wins but player didn't bust - still capture the bird!
+          inlinePrimary = 'Dealer Wins';
+          inlineSecondary = `−$${gameState.currentBet}`;
+          inlineType = 'lose';
         }
-        const inlineSecondary = playerWon ? `+$${winnings - gameState.currentBet}` : 'Bet returned';
         showInlineResult(inlinePrimary, inlineSecondary, inlineType);
 
         // Let the hand result breathe before showing capture modal
@@ -2293,6 +2408,8 @@
           subtext += ` · +$${winnings - gameState.currentBet}`;
         } else if (playerPushed) {
           subtext += ' · Bet returned';
+        } else if (playerLost) {
+          subtext += ` · −$${gameState.currentBet}`;
         }
         if (isDanger) {
           subtext += ` · $${gameState.bankroll} left`;
