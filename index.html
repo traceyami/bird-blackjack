@@ -1089,6 +1089,170 @@
         left: 30px;
       }
     }
+
+    /* ===========================================
+       HOW TO PLAY MODAL
+       =========================================== */
+    .howto-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 250;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .howto-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .howto-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 32px 36px;
+      background: linear-gradient(135deg, rgba(2, 91, 42, 0.95), rgba(1, 60, 28, 0.98));
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 320px;
+      animation: modal-pop 0.3s ease-out;
+    }
+
+    .howto-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 38px);
+      grid-template-rows: repeat(3, 32px);
+      gap: 4px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+    }
+
+    .howto-mini-cell {
+      width: 38px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: rgba(255, 255, 255, 0.5);
+      transition: all 0.6s ease;
+    }
+
+    .howto-mini-cell .suit {
+      font-size: 0.8em;
+      margin-left: 1px;
+    }
+
+    .howto-mini-cell.highlight {
+      background: rgba(255, 205, 0, 0.35);
+      color: var(--color-white);
+      box-shadow: 0 0 8px rgba(255, 205, 0, 0.3);
+    }
+
+    .howto-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .howto-headline {
+      font-size: 0.85rem;
+      color: var(--color-gold);
+      line-height: 1.5;
+      margin: 0;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .howto-rules {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .howto-rule {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 0.85rem;
+      color: var(--color-white);
+      line-height: 1.5;
+    }
+
+    .howto-rule .icon {
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .howto-rule strong {
+      color: var(--color-gold);
+    }
+
+    .howto-btn {
+      padding: 12px 36px;
+      font-family: var(--font-primary);
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-black);
+      background: var(--color-gold);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .howto-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .howto-btn:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 400px) {
+      .howto-content {
+        padding: 24px 24px;
+        gap: 20px;
+        max-width: 290px;
+      }
+
+      .howto-mini-grid {
+        grid-template-columns: repeat(3, 34px);
+        grid-template-rows: repeat(3, 28px);
+      }
+
+      .howto-mini-cell {
+        width: 34px;
+        height: 28px;
+        font-size: 10px;
+      }
+
+      .howto-rule {
+        font-size: 0.8rem;
+      }
+
+      .howto-btn {
+        padding: 10px 28px;
+        font-size: 0.8rem;
+      }
+    }
   </style>
 </head>
 <body class="with-rail">
@@ -1169,6 +1333,31 @@
       <div class="game-over-board" id="game-over-board"></div>
       <div class="game-over-stats" id="game-over-stats"></div>
       <button class="btn btn-deal" id="btn-play-again">Play Again</button>
+    </div>
+  </div>
+
+  <!-- How to Play Modal -->
+  <div class="howto-modal" id="howto-modal">
+    <div class="howto-content">
+      <div class="howto-copy">
+        <p class="howto-headline">Play blackjack to stay alive<br>Collect birds to win</p>
+        <div class="howto-rules">
+          <div class="howto-rule">
+            <span class="icon">🃏</span>
+            <span>When a bird (J, Q, K) is in your hand, <strong>don't bust</strong> — or you lose it!</span>
+          </div>
+          <div class="howto-rule">
+            <span class="icon">⚡</span>
+            <span>Bets go up every 2 hands.</span>
+          </div>
+          <div class="howto-rule">
+            <span class="icon">🎯</span>
+            <span>Line up 3 before you're broke.</span>
+          </div>
+        </div>
+      </div>
+      <div class="howto-mini-grid" id="howto-grid"></div>
+      <button class="howto-btn" id="howto-btn">Let's Play</button>
     </div>
   </div>
 
@@ -1315,15 +1504,60 @@
       resultCaptureSubtext: document.getElementById('result-capture-subtext'),
       resultJokerGrid: document.getElementById('result-joker-grid'),
       resultContinue: document.getElementById('result-continue'),
+      // How to Play Modal
+      howtoModal: document.getElementById('howto-modal'),
+      howtoGrid: document.getElementById('howto-grid'),
+      howtoBtn: document.getElementById('howto-btn'),
     };
 
     // ===========================================
     // INITIALIZATION
     // ===========================================
 
+    let howtoAnimationInterval = null;
+
     function init() {
       startNewRun();
       setupEventListeners();
+      showHowToPlay();
+    }
+
+    function showHowToPlay() {
+      // Build the howto grid using the actual game board
+      elements.howtoGrid.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'howto-mini-cell';
+        const bird = gameState.bingoBoard[i];
+        cell.innerHTML = `${bird.rank}<span class="suit">${SUIT_SYMBOLS[bird.suit]}</span>`;
+        elements.howtoGrid.appendChild(cell);
+      }
+
+      // Cycle through winning lines
+      let currentLine = 0;
+      function highlightLine(lineIndex) {
+        const cells = elements.howtoGrid.querySelectorAll('.howto-mini-cell');
+        cells.forEach(c => c.classList.remove('highlight'));
+        BINGO_LINES[lineIndex].forEach(idx => cells[idx].classList.add('highlight'));
+      }
+
+      function cycleLines() {
+        highlightLine(currentLine);
+        currentLine = (currentLine + 1) % BINGO_LINES.length;
+      }
+
+      cycleLines();
+      howtoAnimationInterval = setInterval(cycleLines, 2500);
+
+      // Show modal
+      elements.howtoModal.classList.add('show');
+
+      // Handle dismiss
+      elements.howtoBtn.addEventListener('click', () => {
+        clearInterval(howtoAnimationInterval);
+        elements.howtoModal.classList.remove('show');
+        // Game is already set up, just show the deal button
+      }, { once: true });
     }
 
     function startNewRun() {
